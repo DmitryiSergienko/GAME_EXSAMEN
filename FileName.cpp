@@ -5,8 +5,7 @@
 #include <vector>
 #include <fstream>
 #include <string>
-#include <mmsystem.h> // Для PlaySound()
-#pragma comment(lib, "winmm.lib") // Подключение библиотеки winmm.lib
+#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
 #include "Header.h"
 using namespace std;
 

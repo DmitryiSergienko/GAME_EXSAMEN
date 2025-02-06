@@ -55,3 +55,7 @@ void setVolume(unsigned int volume) {
     unsigned long vol = static_cast<unsigned long>(volume | (volume << 16));
     waveOutSetVolume(NULL, vol); // NULL указывает на использование текущего устройства вывода
 }
+void playTrack(const std::wstring& filePath) {
+    // Напрямую используем Unicode-версию PlaySound
+    PlaySoundW(filePath.c_str(), NULL, SND_FILENAME | SND_ASYNC);
+}

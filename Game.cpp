@@ -48,6 +48,7 @@ bool checkStarGame{ false }, exitGame{ false }, off{ true };
 // Добавить крипов (1х2 клетки, бить сзади)
 // Добавить босс-вертолет (механика: 1 стадия - 1 линия, 2 стадия - крест, 3 стадия - сетка)
 // Добавить возможность покупать HP
+// Добавить цвета
 
 void Game() {
     while (true) { system("cls");
@@ -81,6 +82,7 @@ void Game() {
                 code = 0; system("cls");
                 PlaySound(L"Sound/5Coins.wav", NULL, SND_FILENAME | SND_ASYNC); /*5Coins*/
                 cout << endl << endl; readText(gameText[10]); cout << endl << endl << endl; system("pause");
+                PlaySound(L"Sound/BloodMoney2.wav", NULL, SND_FILENAME | SND_ASYNC); /*BloodMoney2*/
             }
             else if (maps[checkRoom][userY][userX - 1] == '<' && code == 75) {
                 maps[checkRoom][userY][userX] = ' ';
@@ -110,7 +112,7 @@ void Game() {
                 //Сбор денег
                 if (flag) { maps[checkRoom][userY][userX] = 'X'; flag = 0; }
                 else maps[checkRoom][userY][userX] = ' ';
-                if (maps[checkRoom][userY + moveY][userX + moveX] == '$') { 
+                if (maps[checkRoom][userY + moveY][userX + moveX] == '$') {
                     PlaySound(L"Sound/CoinsMario.wav", NULL, SND_FILENAME | SND_ASYNC); /*CoinsMario*/
                     bag.push_back('$'); flag = 1; }
                 else if (maps[checkRoom][userY + moveY][userX + moveX] == 'X') flag = 1;
@@ -150,7 +152,7 @@ void Menu() {
         } break; } //вниз
         case 13: {
             if (choice == startPosY && checkStarGame) { Game(); break; } //Продолжить
-            else if (choice == startPosY + 1) { checkStarGame = true; 
+            else if (choice == startPosY + 1) { checkStarGame = true;
             PlaySound(L"Sound/BloodMoney.wav", NULL, SND_FILENAME | SND_ASYNC); /*BloodMoney*/
             createContent(); Game(); break; } //Новая игра
             else if (choice == startPosY + 2 && checkStarGame) { saveWindow(); break; } //Сохранить
@@ -164,7 +166,7 @@ void Menu() {
             PlaySound(L"Sound/ByeBye.wav", NULL, SND_FILENAME | SND_ASYNC); /*ByeBye*/
             cout << endl << endl << endl << endl; readText(gameText[13]); cout << endl << endl << endl << endl;
             system("pause"); system("cls"); break; }
-        else if (exitGame) break; //Выход
+        else if (exitGame) { system("cls"); break; } //Выход
 
         if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
         menu[choice - moveY][posX] = ' ';
