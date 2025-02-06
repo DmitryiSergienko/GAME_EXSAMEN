@@ -24,4 +24,6 @@ void saveWindow();
 void loadWindow();
 void Game();
 
+void setVolume(unsigned int volume);
+
 #endif //Header

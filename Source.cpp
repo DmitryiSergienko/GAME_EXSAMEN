@@ -5,9 +5,10 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
+#pragma comment(lib, "winmm.lib") // Подключение библиотеки winmm.lib
 #include "Header.h"
 using namespace std;
-
 
 vector <string> loadText(vector <string> map, string LVL) {
     string textPush;
@@ -47,4 +48,10 @@ void printBag(vector <char> bag) {
     for (int i = 0; i < bag.size(); i++) {
         cout << bag[i];
     } cout << endl;
+}
+
+void setVolume(unsigned int volume) {
+    // Устанавливаем одинаковую громкость для обоих каналов (левый и правый)
+    unsigned long vol = static_cast<unsigned long>(volume | (volume << 16));
+    waveOutSetVolume(NULL, vol); // NULL указывает на использование текущего устройства вывода
 }

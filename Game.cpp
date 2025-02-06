@@ -5,6 +5,8 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <mmsystem.h> // Для PlaySound()
+#pragma comment(lib, "winmm.lib") // Подключение библиотеки winmm.lib
 #include "Header.h"
 using namespace std;
 
@@ -32,7 +34,7 @@ vector <char> bag;
 int userX{ 1 }, userY{ 1 }, checkRoom{ 0 }, thisLvL{ 0 }; bool flag{ false };
 
 //Проверка на Старт игры
-bool checkStarGame{ false }, exitGame{ false };
+bool checkStarGame{ false }, exitGame{ false }, off{ true };
 
 // Добавить функцию загрузки и сохранения
 // Добавить жизни и при взаимодействии с ловушкой отнимать их - мины и падение с моста
@@ -49,6 +51,7 @@ bool checkStarGame{ false }, exitGame{ false };
 
 void Game() {
     while (true) { system("cls");
+    PlaySound(L"Sound/BloodMoney2.wav", NULL, SND_FILENAME | SND_ASYNC); /*BloodMoney2*/
         while (true) {
             if (bag.size() == sumCoins) break;
             maps[checkRoom][userY][userX] = '@';
@@ -61,6 +64,14 @@ void Game() {
                 checkRoom++;
                 if (checkRoom > thisLvL) {//Переход на новый уровень
                     system("cls"); thisLvL++;
+                    switch (thisLvL) {
+                        case 1: { PlaySound(L"Sound/AnimeWow.wav", NULL, SND_FILENAME | SND_ASYNC); /*AnimeWow*/ break; }
+                        case 2: { PlaySound(L"Sound/GiveYouUp.wav", NULL, SND_FILENAME | SND_ASYNC); /*GiveYouUp*/ break; }
+                        case 3: { PlaySound(L"Sound/Sexy_Black.wav", NULL, SND_FILENAME | SND_ASYNC); /*Sexy_Black*/ break; }
+                        case 4: { PlaySound(L"Sound/Initial_D.wav", NULL, SND_FILENAME | SND_ASYNC); /*Initial_D*/ break; }
+                        default: break;
+                    }
+                    
                     cout << endl << endl; readText(gameText[11]); cout << endl << endl << endl; system("pause");
                 }
                 maps[checkRoom - 1][userY][userX] = ' ';
@@ -68,6 +79,7 @@ void Game() {
             }
             else if (maps[checkRoom][userY][userX + 1] == '>' && code == 77 && bag.size() < coinsRoom[checkRoom]) {
                 code = 0; system("cls");
+                PlaySound(L"Sound/5Coins.wav", NULL, SND_FILENAME | SND_ASYNC); /*5Coins*/
                 cout << endl << endl; readText(gameText[10]); cout << endl << endl << endl; system("pause");
             }
             else if (maps[checkRoom][userY][userX - 1] == '<' && code == 75) {
@@ -82,12 +94,14 @@ void Game() {
                 case 77: { moveX = 1; break; } //вправо
                 case 72: { moveY = -1; break; } //вверх
                 case 80: { moveY = 1; break; } //вниз
-                case 27: { Menu(); break; } //вниз
+                case 27: { PlaySound(L"Sound/GtaMenu.wav", NULL, SND_FILENAME | SND_ASYNC); /*GtaMenu*/ 
+                    Menu(); break; } //вниз
                 default: break;
             } if (exitGame) { system("cls"); break; } //Выход
             if (maps[checkRoom][userY + moveY][userX + moveX] != '#') {
                 //Ловушка - портал
                 if (maps[checkRoom][userY + moveY][userX + moveX] == 'S') { 
+                    PlaySound(L"Sound/Hurt.wav", NULL, SND_FILENAME | SND_ASYNC); /*Hurt*/
                     if (flag) { maps[checkRoom][userY][userX] = 'X'; flag = 0; }
                     else maps[checkRoom][userY][userX] = ' ';
                     userX = 1; system("cls"); continue;
@@ -96,7 +110,9 @@ void Game() {
                 //Сбор денег
                 if (flag) { maps[checkRoom][userY][userX] = 'X'; flag = 0; }
                 else maps[checkRoom][userY][userX] = ' ';
-                if (maps[checkRoom][userY + moveY][userX + moveX] == '$') { bag.push_back('$'); flag = 1; }
+                if (maps[checkRoom][userY + moveY][userX + moveX] == '$') { 
+                    PlaySound(L"Sound/CoinsMario.wav", NULL, SND_FILENAME | SND_ASYNC); /*CoinsMario*/
+                    bag.push_back('$'); flag = 1; }
                 else if (maps[checkRoom][userY + moveY][userX + moveX] == 'X') flag = 1;
                 else flag = 0;
 
@@ -105,11 +121,18 @@ void Game() {
         } if (bag.size() == sumCoins) break; 
         if (exitGame) { system("cls"); break; } //Выход
     } system("cls");
-    if (!exitGame) { cout << endl << endl << endl << endl; readText(gameText[12]); cout << endl << endl << endl << endl; }
-    else { cout << endl << endl << endl << endl; readText(gameText[13]); cout << endl << endl << endl << endl; } 
+    if (!exitGame) {
+        PlaySound(L"Sound/MissionComplite.wav", NULL, SND_FILENAME | SND_ASYNC); /*MissionComplite*/
+        cout << endl << endl << endl << endl; readText(gameText[12]); cout << endl << endl << endl << endl; }
+    else {
+        PlaySound(L"Sound/CRY.wav", NULL, SND_FILENAME | SND_ASYNC); /*CRY*/
+        cout << endl << endl << endl << endl; readText(gameText[14]); cout << endl << endl << endl << endl; }
     system("pause"); system("cls");
 }
 void Menu() {
+    if (off) { off = false;
+        PlaySound(L"Sound/StartMario.wav", NULL, SND_FILENAME | SND_ASYNC); /*StartMario*/ }
+    
     int startPosY{ 6 }, choice{ startPosY }, posX{ 17 };
     while (true) {
         system("cls");
@@ -119,11 +142,17 @@ void Menu() {
         
         int moveY{ 0 }; menu[choice][posX] = ' ';
         switch (select) {
-        case 72: { if (choice > startPosY) moveY = -1; break; } //вверх
-        case 80: { if (choice < startPosY + 4) moveY = 1; break; } //вниз
+        case 72: { if (choice > startPosY) { moveY = -1; 
+            PlaySound(L"Sound/GtaMenu.wav", NULL, SND_FILENAME | SND_ASYNC); /*GtaMenu*/
+        } break; } //вверх
+        case 80: { if (choice < startPosY + 4) { moveY = 1;
+            PlaySound(L"Sound/GtaMenu.wav", NULL, SND_FILENAME | SND_ASYNC); /*GtaMenu*/
+        } break; } //вниз
         case 13: {
             if (choice == startPosY && checkStarGame) { Game(); break; } //Продолжить
-            else if (choice == startPosY + 1) { checkStarGame = true; createContent(); Game(); break; } //Новая игра
+            else if (choice == startPosY + 1) { checkStarGame = true; 
+            PlaySound(L"Sound/BloodMoney.wav", NULL, SND_FILENAME | SND_ASYNC); /*BloodMoney*/
+            createContent(); Game(); break; } //Новая игра
             else if (choice == startPosY + 2 && checkStarGame) { saveWindow(); break; } //Сохранить
             else if (choice == startPosY + 3) { loadWindow(); break; } //Загрузить
             else if (choice == startPosY + 4) { exitGame = true; break; } //Выход
@@ -132,6 +161,7 @@ void Menu() {
         default: break;
         } if (exitGame && !checkStarGame) {
             system("cls");
+            PlaySound(L"Sound/ByeBye.wav", NULL, SND_FILENAME | SND_ASYNC); /*ByeBye*/
             cout << endl << endl << endl << endl; readText(gameText[13]); cout << endl << endl << endl << endl;
             system("pause"); system("cls"); break; }
         else if (exitGame) break; //Выход
