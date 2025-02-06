@@ -21,36 +21,34 @@ vector <string> loadText(vector <string> map, string LVL) {
     fileMap.close();
     return map;
 }
-void ReadText(string Text) {
+void readText(string Text) {
     for (int j{ 0 }; j < Text.size(); j++) {
         cout << Text[j];
         if (!_kbhit()) Sleep(150); else Sleep(0);
     }
 }
 
-void printMap(vector <string> map)
-{
-    for (int i = 0; i < map.size(); i++)
-    {
-        for (int j = 0; j < map[i].size(); j++)
-        {
+void printMap(vector <string> map) {
+    for (int i = 0; i < map.size(); i++) {
+        for (int j = 0; j < map[i].size(); j++) {
             cout << map[i][j] << " ";
-        }
-        cout << endl;
-    }
-    cout << endl << endl;
+        } cout << endl;
+    } cout << endl << endl;
 }
-void printBag(char* bag, short bagSize)
-{
+void printMenu(vector <string> menu) {
+    for (int i = 0; i < menu.size(); i++) {
+        for (int j = 0; j < menu[i].size(); j++) {
+            cout << menu[i][j];
+        } cout << endl;
+    } cout << endl << endl;
+}
+void printBag(char* bag, short bagSize) {
     cout << "Количество $: " << bagSize << endl;
-    for (int i = 0; i < bagSize; i++)
-    {
+    for (int i = 0; i < bagSize; i++) {
         cout << bag[i];
-    }
-    cout << endl;
+    } cout << endl;
 }
 void bagFill(char*& bag, short bagSize) {
-    delete[] bag;
-    bag = new char[bagSize];
+    delete[] bag; bag = new char[bagSize];
     for (int i = 0; i < bagSize; i++) bag[i] = '$';
 }
