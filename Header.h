@@ -13,13 +13,15 @@ using namespace std;
 vector <string> loadText(vector <string> map, string LVL);
 void readText(string Text);
 void createContent();
+void clearData();
 
 void printMap(vector <string> map);
 void printMenu(vector <string> menu);
-void printBag(char* bag, short bagSize);
-void bagFill(char*& bag, short bagSize);
+void printBag(vector <char> bag);
 
 void Menu();
+void saveWindow();
+void loadWindow();
 void Game();
 
 #endif //Header

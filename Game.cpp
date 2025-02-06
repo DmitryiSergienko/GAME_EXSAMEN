@@ -9,91 +9,55 @@
 using namespace std;
 
 //Названия файлов
-vector <string> LvL = { "LvL1.txt","LvL2.txt", "LvL3.txt", "LvL4.txt", "LvL5.txt" };
-string infoText = "InfoText.txt";
-string MENU = "Menu.txt";
+vector <string> LvL = { "Text/Data/LvL1.txt","Text/Data/LvL2.txt", "Text/Data/LvL3.txt", 
+                        "Text/Data/LvL4.txt", "Text/Data/LvL5.txt" };
+string infoText = "Text/Data/InfoText.txt";
+string MENU = "Text/Data/Menu.txt";
+string SAVE = "Text/Save/Save.txt";
+string LOAD = "Text/Save/Load.txt";
 
 //Выгружаем Текст для игры и меню
 vector <string> gameText = loadText(gameText, infoText);
 vector <string> menu = loadText(menu, MENU);
+vector <string> save = loadText(save, SAVE);
+vector <string> load = loadText(load, LOAD);
 
 //Выгружаем все карты и добавляем монеты
 vector <vector <string>> maps;
-int* coinsRoom = new int[LvL.size()];
+vector <int> coinsRoom;
 int Coins{ 5 }, sumCoins = LvL.size() * Coins;
+vector <char> bag;
 
-// Добавить меню
+//Интерфейс
+int userX{ 1 }, userY{ 1 }, checkRoom{ 0 }, thisLvL{ 0 }; bool flag{ false };
+
+//Проверка на Старт игры
+bool checkStarGame{ false }, exitGame{ false };
+
 // Добавить функцию загрузки и сохранения
-// Добавить жизни и при взаимодействии с ловушкой отнимать их
-// Добавить врагов (босс-вертолет)
+// Добавить жизни и при взаимодействии с ловушкой отнимать их - мины и падение с моста
+// Добавить уровень с минами
+// Добавить секретный магазин
+// Добавить уровень с мостом
+// Добавить сундук с ключом и бомжом
+// Добавить подсказку к мосту
+// Добавить меч в магазин
+// Добавить металло-искател для поиска мин и лопату
+// Добавить крипов (1х2 клетки, бить сзади)
+// Добавить босс-вертолет (механика: 1 стадия - 1 линия, 2 стадия - крест, 3 стадия - сетка)
 // Добавить возможность покупать HP
 
-bool checkStarGame{ false };
-
-void Menu() {
-    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 };
-    while (true) {
-        system("cls");
-        menu[choice][posX] = '@';
-        printMenu(menu);
-        int select = _getch(); if (select == 0) select = _getch();
-        
-        int moveY{ 0 };
-        switch (select) {
-            case 72: { if (choice > startPosY) moveY = -1; break; } //вверх
-            case 80: { if (choice < startPosY + 4) moveY = 1; break; } //вниз
-            case 13: {
-                if (choice == startPosY && checkStarGame) { Game(); cout << "Функция продолжить!"; system("pause"); break; }
-                else if (choice == startPosY + 1) { checkStarGame = true; createContent(); Game(); break; }
-                else if (choice == startPosY + 2 && checkStarGame) { cout << "Функция сохранить!"; system("pause"); break; }
-                else if (choice == startPosY + 3) { cout << "Функция загрузить!"; system("pause"); break; }
-                else if (choice == startPosY + 4) { cout << "Функция выход!"; system("pause"); break; }
-            }
-            case 27: { if (checkStarGame) { Game(); cout << "Функция продолжить!"; system("pause"); break; } }
-            default: break;
-        }
-
-        if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
-        menu[choice - moveY][posX] = ' ';
-    }
-}
-
-
-
-void createContent() {
-    for (int i{ 0 }; i <= 5; i++) {
-        if (i < 3) { readText(gameText[i]); cout << endl << endl; system("pause"); system("cls"); }
-        else { readText(gameText[i]); cout << endl << endl; system("cls"); }
-    }
-
-    readText(gameText[6]); cout << endl << endl; system("pause"); system("cls");
-    for (int i{ 0 }; i < LvL.size(); i++) {
-        vector <string> temp = loadText(temp, LvL[i]);
-        maps.push_back(temp);
-        coinsRoom[i] = Coins * (i + 1);
-    }
-
-    //Правила игры
-    for (int i{ 7 }; i <= 9; i++) { readText(gameText[i]); cout << endl; }
-    cout << endl; system("pause"); system("cls");
-}
-
 void Game() {
-    int userX{ 1 }, userY{ 1 }, checkRoom{ 0 }, thisLvL{ 0 };
-    bool flag{ false };
-    short bagSize{ 0 };
-    char* bag = new char[bagSize];
-    
     while (true) { system("cls");
         while (true) {
-            if (bagSize == sumCoins) break;
+            if (bag.size() == sumCoins) break;
             maps[checkRoom][userY][userX] = '@';
             printMap(maps[checkRoom]);
-            printBag(bag, bagSize);
+            printBag(bag);
             
             int code = _getch(); if (code == 0) code = _getch();
             
-            if (maps[checkRoom][userY][userX + 1] == '>' && code == 77 && bagSize >= coinsRoom[checkRoom]) {
+            if (maps[checkRoom][userY][userX + 1] == '>' && code == 77 && bag.size() >= coinsRoom[checkRoom]) {
                 checkRoom++;
                 if (checkRoom > thisLvL) {//Переход на новый уровень
                     system("cls"); thisLvL++;
@@ -102,7 +66,7 @@ void Game() {
                 maps[checkRoom - 1][userY][userX] = ' ';
                 userX = 1; break;
             }
-            else if (maps[checkRoom][userY][userX + 1] == '>' && code == 77 && bagSize < coinsRoom[checkRoom]) {
+            else if (maps[checkRoom][userY][userX + 1] == '>' && code == 77 && bag.size() < coinsRoom[checkRoom]) {
                 code = 0; system("cls");
                 cout << endl << endl; readText(gameText[10]); cout << endl << endl << endl; system("pause");
             }
@@ -120,7 +84,7 @@ void Game() {
                 case 80: { moveY = 1; break; } //вниз
                 case 27: { Menu(); break; } //вниз
                 default: break;
-            }
+            } if (exitGame) { system("cls"); break; } //Выход
             if (maps[checkRoom][userY + moveY][userX + moveX] != '#') {
                 //Ловушка - портал
                 if (maps[checkRoom][userY + moveY][userX + moveX] == 'S') { 
@@ -132,14 +96,121 @@ void Game() {
                 //Сбор денег
                 if (flag) { maps[checkRoom][userY][userX] = 'X'; flag = 0; }
                 else maps[checkRoom][userY][userX] = ' ';
-                if (maps[checkRoom][userY + moveY][userX + moveX] == '$') { bagSize++; bagFill(bag, bagSize); flag = 1; }
+                if (maps[checkRoom][userY + moveY][userX + moveX] == '$') { bag.push_back('$'); flag = 1; }
                 else if (maps[checkRoom][userY + moveY][userX + moveX] == 'X') flag = 1;
                 else flag = 0;
 
                 userX += moveX; userY += moveY;
             } system("cls");
-        } if (bagSize == sumCoins) break; 
+        } if (bag.size() == sumCoins) break; 
+        if (exitGame) { system("cls"); break; } //Выход
     } system("cls");
-    cout << endl << endl << endl << endl; readText(gameText[12]); cout << endl << endl << endl << endl;
-    delete[] coinsRoom; delete[] bag;
+    if (!exitGame) { cout << endl << endl << endl << endl; readText(gameText[12]); cout << endl << endl << endl << endl; }
+    else { cout << endl << endl << endl << endl; readText(gameText[13]); cout << endl << endl << endl << endl; } 
+    system("pause"); system("cls");
+}
+void Menu() {
+    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 };
+    while (true) {
+        system("cls");
+        menu[choice][posX] = '@';
+        printMenu(menu);
+        int select = _getch(); if (select == 0) select = _getch();
+        
+        int moveY{ 0 }; menu[choice][posX] = ' ';
+        switch (select) {
+        case 72: { if (choice > startPosY) moveY = -1; break; } //вверх
+        case 80: { if (choice < startPosY + 4) moveY = 1; break; } //вниз
+        case 13: {
+            if (choice == startPosY && checkStarGame) { Game(); break; } //Продолжить
+            else if (choice == startPosY + 1) { checkStarGame = true; createContent(); Game(); break; } //Новая игра
+            else if (choice == startPosY + 2 && checkStarGame) { saveWindow(); break; } //Сохранить
+            else if (choice == startPosY + 3) { loadWindow(); break; } //Загрузить
+            else if (choice == startPosY + 4) { exitGame = true; break; } //Выход
+        }
+        case 27: { if (checkStarGame) { Game(); break; } }
+        default: break;
+        } if (exitGame && !checkStarGame) {
+            system("cls");
+            cout << endl << endl << endl << endl; readText(gameText[13]); cout << endl << endl << endl << endl;
+            system("pause"); system("cls"); break; }
+        else if (exitGame) break; //Выход
+
+        if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
+        menu[choice - moveY][posX] = ' ';
+    }
+}
+void saveWindow() {
+    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 }; bool exitSave{ false };
+    while (true) {
+        system("cls");
+        save[choice][posX] = '@';
+        printMenu(save);
+        int select = _getch(); if (select == 0) select = _getch();
+
+        int moveY{ 0 }; save[choice][posX] = ' ';
+        switch (select) {
+        case 72: { if (choice > startPosY) moveY = -1; break; } //вверх
+        case 80: { if (choice < startPosY + 4) moveY = 1; break; } //вниз
+        case 13: {
+            if (choice == startPosY) { cout << "Загрузка 1!"; break; } //Загрузить 1 игру
+            else if (choice == startPosY + 1) { cout << "Загрузка 2!"; break; } //Загрузить 2 игру
+            else if (choice == startPosY + 2) { cout << "Загрузка 3!"; break; } //Загрузить 3 игру
+            else if (choice == startPosY + 3) { cout << "Загрузка 4!"; break; } //Загрузить 4 игру
+            else if (choice == startPosY + 4) { exitSave = true; break; } //Назад
+        }
+        case 27: { exitSave = true; break; } //Назад
+        default: break;
+        }if (exitSave) break; //Назад
+        if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
+        save[choice - moveY][posX] = ' ';
+    }
+}
+void loadWindow() {
+    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 }; bool exitLoad{ false };
+    while (true) {
+        system("cls");
+        load[choice][posX] = '@';
+        printMenu(load);
+        int select = _getch(); if (select == 0) select = _getch();
+
+        int moveY{ 0 }; load[choice][posX] = ' ';
+        switch (select) {
+        case 72: { if (choice > startPosY) moveY = -1; break; } //вверх
+        case 80: { if (choice < startPosY + 4) moveY = 1; break; } //вниз
+        case 13: {
+            if (choice == startPosY) { cout << "Загрузка 1!"; break; } //Загрузить 1 игру
+            else if (choice == startPosY + 1) { cout << "Загрузка 2!"; break; } //Загрузить 2 игру
+            else if (choice == startPosY + 2) { cout << "Загрузка 3!"; break; } //Загрузить 3 игру
+            else if (choice == startPosY + 3) { cout << "Загрузка 4!"; break; } //Загрузить 4 игру
+            else if (choice == startPosY + 4) { exitLoad = true; break; } //Назад
+        }
+        case 27: { exitLoad = true; break; } //Назад
+        default: break;
+        } if (exitLoad) break; //Назад
+        if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
+        load[choice - moveY][posX] = ' ';
+    }
+}
+void createContent() {
+    clearData();
+    for (int i{ 0 }; i <= 5; i++) {
+        if (i < 3) { readText(gameText[i]); cout << endl << endl; system("pause"); system("cls"); }
+        else { readText(gameText[i]); cout << endl << endl; system("cls"); }
+    }
+
+    readText(gameText[6]); cout << endl << endl; system("pause"); system("cls");
+    for (int i{ 0 }; i < LvL.size(); i++) {
+        vector <string> temp = loadText(temp, LvL[i]);
+        maps.push_back(temp);
+        coinsRoom.push_back(Coins * (i + 1));
+    }
+
+    //Правила игры
+    for (int i{ 7 }; i <= 9; i++) { readText(gameText[i]); cout << endl; }
+    cout << endl; system("pause"); system("cls");
+}
+void clearData() {
+    maps.clear(); coinsRoom.clear(); bag.clear();
+    userX = 1; userY = 1; checkRoom = 0; thisLvL = 0; flag = false;
 }

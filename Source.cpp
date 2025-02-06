@@ -42,13 +42,9 @@ void printMenu(vector <string> menu) {
         } cout << endl;
     } cout << endl << endl;
 }
-void printBag(char* bag, short bagSize) {
-    cout << "Количество $: " << bagSize << endl;
-    for (int i = 0; i < bagSize; i++) {
+void printBag(vector <char> bag) {
+    cout << "Количество $: " << bag.size() << endl;
+    for (int i = 0; i < bag.size(); i++) {
         cout << bag[i];
     } cout << endl;
-}
-void bagFill(char*& bag, short bagSize) {
-    delete[] bag; bag = new char[bagSize];
-    for (int i = 0; i < bagSize; i++) bag[i] = '$';
 }
