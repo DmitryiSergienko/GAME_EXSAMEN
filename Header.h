@@ -6,11 +6,19 @@
 #include <stdio.h>
 #include <conio.h>
 #include <vector>
+#include <ctime> // Для получения времени
 #include <fstream>
+#include <direct.h> // Для создания папки
+#include <io.h> // Для _access - проверка наличия папки
 #include <string>
+#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
+#pragma comment(lib, "winmm.lib") // Подключение библиотеки winmm.lib
 using namespace std;
 
+void addPathFiles();
 vector <string> loadText(vector <string> map, string LVL);
+void createFolder(const char* path);
+void saveText(const char* nameSaveFolder, string nameFile, vector <string> text);
 void readText(string Text);
 void createContent();
 void clearData();
@@ -21,9 +29,60 @@ void printBag(vector <char> bag);
 
 void Menu();
 void saveWindow();
+void saveGame(const char* directory = "Save", string nameSaveFolder = "Standart");
 void loadWindow();
 void Game();
 
 void setVolume(unsigned int volume);
+void playTrack(const wstring& filePath);
+void track(int num);
+
+string getTime();
+
+int nextLVL(int code);
+void move(int code);
 
 #endif //Header
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+#ifndef GLOBAL_H
+#define GLOBAL_H
+
+//Директория и названия файлов
+extern string pathLvL;
+extern vector <string> LvLFiles;
+extern vector <string> LvL;
+
+extern string infoText;
+extern string MENU;
+extern string SAVE;
+extern string LOAD;
+
+//Выгружаем Текст для игры и меню
+extern vector <string> gameText;
+extern vector <string> menu;
+extern vector <string> save;
+extern vector <string> load;
+
+//Выгружаем все карты и добавляем монеты
+extern vector <vector <string>> maps;
+extern vector <int> coinsRoom;
+extern int Coins;
+extern int sumCoins;
+extern vector <char> bag;
+
+//Интерфейс
+extern int userX;
+extern int userY;
+extern int checkRoom;
+extern int thisLvL;
+extern bool flag;
+
+//Проверка на Старт игры
+extern bool checkStarGame;
+extern bool exitGame;
+extern bool exitMenu;
+extern bool off;
+
+#endif // GLOBAL_H
