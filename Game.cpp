@@ -6,6 +6,7 @@
 #include <ctime> // Для получения времени
 #include <fstream>
 #include <direct.h> // Для создания папки
+#include <shellapi.h> // Для удаления папки
 #include <io.h> // Для _access - проверка наличия папки
 #include <string>
 #include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
@@ -13,7 +14,6 @@
 #include "Header.h"
 using namespace std;
 
-// Добавить функцию загрузки и сохранения
 // Добавить жизни и при взаимодействии с ловушкой отнимать их - мины и падение с моста
 // Добавить уровень с минами
 // Добавить секретный магазин
@@ -26,14 +26,13 @@ using namespace std;
 // Добавить босс-вертолет (механика: 1 стадия - 1 линия, 2 стадия - крест, 3 стадия - сетка)
 // Добавить возможность покупать HP
 // Добавить цвета
+// Добавить пункт Настройки - регулировка громкости, смена цвета, уровень сложности
 
 void Menu() {
-    addPathFiles();
-    if (off) {
-        off = false;
-        track(23); //StartMario
-    }
-
+    addPathFiles(); // Добавляем путь к файлам
+    sumCoins = LvL.size() * Coins; // Максимальное кол-во монет в игре
+    if (offMenu) { offMenu = false; track(23); } //StartMario
+    
     int startPosY{ 6 }, choice{ startPosY }, posX{ 17 };
     while (true) {
         system("cls");
@@ -54,18 +53,29 @@ void Menu() {
             } break;
         }
         case 13: {
-            if (choice == startPosY && checkStarGame) { Game(); break; } //Продолжить
-            else if (choice == startPosY + 1) {
+            if (choice == startPosY) {
+                if (checkStarGame == false && saveName[5] != "Empty") { checkStarGame = true; loadGame(5, 0); } //Продолжить с последнего сохранения
+                else if (checkStarGame == false) { track(26); readText(gameText[16]); cout << endl; system("pause"); break; }
+                else Game(); break; } //Продолжить
+            else if (choice == startPosY + 1) { //Новая игра
                 checkStarGame = true; track(4); //BloodMoney
+                pathLvL = "Text/Data/"; addPathFiles();
                 createContent(); Game(); break;
-            } //Новая игра
+            } 
             else if (choice == startPosY + 2 && checkStarGame) { saveWindow(); break; } //Сохранить
-            else if (choice == startPosY + 3) { loadWindow(); break; } //Загрузить
+            else if (choice == startPosY + 2) { track(27); readText(gameText[17]); cout << endl; system("pause"); break; }
+            else if (choice == startPosY + 3) { //Загрузить
+                bool checkLoad{ false };
+                for (int i{ 0 }; i < 4; i++) if (saveName[i] != "---") checkLoad = true;
+                if (checkLoad) loadWindow(); 
+                else { track(28); readText(gameText[16]); cout << endl; system("pause"); } break;
+            }
             else if (choice == startPosY + 4) { exitGame = true; break; } //Выход
         }
         case 27: { if (checkStarGame) { Game(); break; } }
         default: break;
-        } if (exitGame && !checkStarGame) {
+        } 
+        if (exitGame && !checkStarGame) {
             system("cls");
             track(7); //ByeBye
             cout << endl << endl << endl << endl; readText(gameText[13]); cout << endl << endl << endl << endl;
@@ -88,7 +98,6 @@ void Menu() {
 }
 
 void Game() {
-    sumCoins = LvL.size() * Coins;
     while (true) {
         system("cls");
         track(5); //BloodMoney2
@@ -109,12 +118,8 @@ void Game() {
             int checkCode = nextLVL(code);//Переход на новый уровень
             if (checkCode != 1) code = checkCode;
             move(code); system("cls"); //Ходьба
-
-        } if (bag.size() == sumCoins) break; //Победа
-        if (exitGame || exitMenu) { track(14); /*GtaMenu*/ system("cls"); break; } //Выход в меню
-    } system("cls");
-    if (exitGame) {
-        
+        } 
+        if (bag.size() == sumCoins) break; //Победа
+        if (exitGame || exitMenu) { track(14); /*GtaMenu*/ system("cls"); Menu(); break; } //Выход в меню
     }
-    system("cls");
 }

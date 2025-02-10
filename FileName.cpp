@@ -6,6 +6,7 @@
 #include <ctime> // Для получения времени
 #include <fstream>
 #include <direct.h> // Для создания папки
+#include <shellapi.h> // Для удаления папки
 #include <io.h> // Для _access - проверка наличия папки
 #include <string>
 #include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
