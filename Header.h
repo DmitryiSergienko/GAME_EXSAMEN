@@ -24,6 +24,7 @@ void readText(string Text);
 void createContent();
 void clearData();
 void clearFolder(const string& path);
+bool folderExists(const string& path);
 int deleteSave(const char* directory, string nameSaveFolder);
 
 void printMap(vector <string> map);
@@ -31,14 +32,15 @@ void printMenu(vector <string> menu);
 void printBag(vector <char> bag);
 
 void Menu();
+void Game();
 void saveWindow();
 string saveGame(const char* directory = "Save", string nameSaveFolder = "Default");
 void saveLineWindow(int posX, int choice, int startPosY);
 void loadWindow();
-void loadGame(int choice, int startPosY);
+void loadGame(int choice, int startPosY, int posX);
 void settingsWindow();
 void settingSound(int choice, int posX);
-void Game();
+void changePathSave();
 
 void setVolume(unsigned int volume);
 void playTrack(const wstring& filePath);

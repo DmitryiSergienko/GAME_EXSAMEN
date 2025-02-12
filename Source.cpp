@@ -20,15 +20,16 @@ void addPathFiles() {
     for (int i = 0; i < LvLFiles.size(); i++) LvL.push_back(pathLvL + LvLFiles[i]);
 }
 vector <string> loadText(vector <string> text, string nameFile) {
-    string textPush;
-    fstream fileMap{ nameFile, ios::in };
-    if (!fileMap.is_open()) {
-        cout << "Файл не открыт!!" << endl;
+    try {
+        string textPush;
+        fstream fileMap{ nameFile, ios::in };
+        if (!fileMap.is_open()) throw "Файл не найден!!!";
+        for (int i = 0; getline(fileMap, textPush); i++) {
+            text.push_back(textPush);
+        }
+        fileMap.close();
     }
-    for (int i = 0; getline(fileMap, textPush); i++) {
-        text.push_back(textPush);
-    }
-    fileMap.close();
+    catch (const char* err) { cerr << err << endl; }
     return text;
 }
 void saveText(const char* nameSaveFolder, string nameFile, vector <string> text) {
@@ -84,6 +85,9 @@ void clearFolder(const string& path) {
         fs::remove_all(path);
     }
     catch (const fs::filesystem_error& e) { cerr << "Ошибка при удалении директории: " << e.what() << endl; }
+}
+bool folderExists(const string& path) {
+    return fs::exists(path) && fs::is_directory(path);
 }
 int deleteSave(const char* directory, string nameSaveFolder) {
     vector<string> questionDelete; // Вы точно хотите удалить сохранение?
@@ -270,7 +274,7 @@ void loadWindow() {
         case 13: {
             if ((choice < startPosY + 4) && saveName[choice - startPosY] != "---") { // Загрузить игру
                 checkStarGame = true;
-                loadGame(choice, startPosY); break;
+                loadGame(choice, startPosY, posX); break;
             }
             else if (choice == startPosY + 4) { system("cls"); exitMenu = true; break; } // Выход в меню
             else break;
@@ -323,31 +327,46 @@ void loadWindow() {
         if (exitMenu) break; // Выход в меню
     }
 }
-void loadGame(int choice, int startPosY) {
-    string nameSaveFolder = saveName[choice - startPosY];
-    clearData();
-    string directory = saveName[4], BackSlash = "/";
-    pathLvL = directory + BackSlash + nameSaveFolder + BackSlash;
-    addPathFiles(); //Меняем путь к папке загрузки
-    
-    for (int i{ 0 }; i < LvL.size(); i++) { // Загрузка карт
-        vector <string> temp = loadText(temp, LvL[i]);
-        maps.push_back(temp);
-        coinsRoom.push_back(Coins * (i + 1));
+void loadGame(int choice, int startPosY, int posX) {
+    try {
+        string nameSaveFolder = saveName[choice - startPosY];
+        string directory = saveName[4], BackSlash = "/";
+        pathLvL = directory + BackSlash + nameSaveFolder + BackSlash;
+        addPathFiles(); // Добавляем часть пути к папке загрузки
+
+        if (!(folderExists(pathLvL))) throw gameText[34].c_str(); // Проверяем папку на наличие
+        clearData(); // Очищаем все данные перед загрузкой
+        for (int i{ 0 }; i < LvL.size(); i++) { // Загрузка карт
+            vector <string> temp = loadText(temp, LvL[i]);
+            maps.push_back(temp);
+            coinsRoom.push_back(Coins * (i + 1));
+        }
+
+        sourceFile = "Source.txt"; sourceFile = pathLvL + BackSlash + sourceFile;
+        // Добавляем в вектор ресурсы
+        vector<string> source = loadText(source, sourceFile);
+        for (int i{ 0 }; i < source[1].size(); i++) bag.push_back(source[1][i]); // Заполняем инвентарь
+
+        // Добавляем в вектор состаяние элементов
+        checkRoom = stoi(source[3]);
+        userX = stoi(source[5]);
+        userY = stoi(source[7]);
+        thisLvL = stoi(source[9]);
+        flag = bool(stoi(source[11]));
+        Game();
     }
-    
-    sourceFile = "Source.txt"; sourceFile = pathLvL + BackSlash + sourceFile;
-    // Добавляем в вектор ресурсы
-    vector<string> source = loadText(source, sourceFile);
-    for (int i{ 0 }; i < source[1].size(); i++) { bag.push_back(source[1][i]); cout << bag[i]; } // Заполняем инвентарь
-    
-    // Добавляем в вектор состаяние элементов
-    checkRoom = stoi(source[3]);
-    userX = stoi(source[5]);
-    userY = stoi(source[7]);
-    thisLvL = stoi(source[9]);
-    flag = bool(stoi(source[11]));
-    Game();
+    catch (const char* err) { cerr << err << endl;
+        save[choice] = save[3]; // Удаляем одно сохранение
+        load[choice] = load[3];
+        saveName[choice - startPosY] = "---";
+        save[choice].replace(posX + 2, saveName[choice - startPosY].size(), saveName[choice - startPosY]);
+        load[choice].replace(posX + 2, saveName[choice - startPosY].size(), saveName[choice - startPosY]);
+
+        for (int i{ 0 }; i < 4; i++) if (saveName[i] != "---") saveName[5] = saveName[i]; // Добавляем сейв если есть для Продолжить
+
+        saveText("Text/Data/", "SaveName.txt", saveName);
+        system("pause");
+    }
 }
 void settingsWindow() {
     int startPosY{ 6 }, choice{ startPosY }, posX{ 17 }; exitMenu = false;
@@ -364,9 +383,10 @@ void settingsWindow() {
         case 80: { if (choice < startPosY + 5) moveY = 1; track(14); /*GtaMenu*/ break; } // Вниз
         case 13: {
             if (choice == startPosY) { settingSound(choice, posX); exitMenu = false; break; } // Настройка звука
-            else if (choice > startPosY && choice < startPosY + 5) { // Выбор настройки
+            else if (choice > startPosY && choice < startPosY + 4) { // Выбор настройки
                 cout << "Круто!\n"; break;
             }
+            else if (choice == startPosY + 4) { changePathSave(); exitMenu = false; break; }
             else { system("cls"); exitMenu = true; break; } // Выход в меню
             break;
         }
@@ -402,6 +422,14 @@ void settingSound(int choice, int posX) {
         saveText("Text/Data/", "InfoText.txt", gameText);
         if (exitMenu) break;
     }   
+}
+void changePathSave() {
+    readText(gameText[32]); readText(saveName[4]); cout << endl;
+    readText(gameText[33]); string directory; getline(cin, directory);
+
+    saveName[4] = directory;
+    saveText("Text/Data/", "SaveName.txt", saveName);
+    track(3);
 }
 
 void setVolume(unsigned int volume) {
@@ -504,7 +532,7 @@ int moveMenu(int select, int choice, int startPosY) {
     case 80: { if (choice < startPosY + 5) { moveY = 1; track(14); /*GtaMenu*/ } break; } // Вниз
     case 13: {
         if (choice == startPosY) {
-            if (checkStarGame == false && saveName[5] != "Empty") { checkStarGame = true; loadGame(5, 0); } // Продолжить с последнего сохранения
+            if (checkStarGame == false && saveName[5] != "Empty") { checkStarGame = true; loadGame(5, 0, 0); } // Продолжить с последнего сохранения
             else if (checkStarGame == false) { track(26); readText(gameText[16]); cout << endl; system("pause"); break; }
             else Game(); break;
         } // Продолжить
