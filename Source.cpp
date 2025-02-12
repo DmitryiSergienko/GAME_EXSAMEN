@@ -6,13 +6,14 @@
 #include <ctime> // Для получения времени
 #include <fstream>
 #include <direct.h> // Для создания папки
-#include <shellapi.h> // Для удаления папки
+#include <filesystem> // Для удаления папки
 #include <io.h> // Для _access - проверка наличия папки
 #include <string>
 #include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
-#pragma comment(lib, "winmm.lib") // Подключение библиотеки winmm.lib
+#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume()
 #include "Header.h"
 using namespace std;
+namespace fs = std::filesystem;
 
 void addPathFiles() {
     LvL.clear();
@@ -29,10 +30,6 @@ vector <string> loadText(vector <string> text, string nameFile) {
     }
     fileMap.close();
     return text;
-}
-void createFolder(const char* path) {
-    if (_mkdir(path) == 0) cout << "Папка успешно создана: " << path << endl;
-    else cerr << "Не удалось создать папку." << endl;
 }
 void saveText(const char* nameSaveFolder, string nameFile, vector <string> text) {
     string backSlach = "\\";
@@ -71,16 +68,51 @@ void clearData() {
     maps.clear(); coinsRoom.clear(); bag.clear();
     userX = 1; userY = 1; checkRoom = 0; thisLvL = 0; flag = false;
 }
+void createFolder(const char* path) {
+    if (_mkdir(path) == 0) cout << "Папка успешно создана: " << path << endl;
+    else cerr << "Не удалось создать папку." << endl;
+}
 void clearFolder(const string& path) {
-    const char* path1 = "Save\\2025_2_10_1_29_48";
-    SHFILEOPSTRUCTA fileOp = {};
-    fileOp.wFunc = FO_DELETE; // Операция удаления
-    fileOp.pFrom = path.c_str();      // Путь к папке
-    fileOp.fFlags = FOF_NOCONFIRMATION | FOF_SILENT; // Без запросов и вывода сообщений
+    try {
+        // Проверяем, существует ли путь
+        if (!fs::exists(path)) cerr << "Путь не существует: " << path << endl;
 
-    int result = SHFileOperationA(&fileOp);
-    if (result == 0) cout << "Папка успешно удалена." << endl;
-    else { cerr << "Не удалось удалить папку." << endl; system("pause"); }
+        // Проверяем, является ли путь директорией
+        if (!fs::is_directory(path)) cerr << "Указанный путь не является директорией: " << path << endl;
+
+        // Удаляем директорию и все её содержимое
+        fs::remove_all(path);
+        readText(gameText[19]); cout << endl; system("pause");
+    }
+    catch (const fs::filesystem_error& e) { cerr << "Ошибка при удалении директории: " << e.what() << endl; }
+}
+void deleteSave(const char* directory, string nameSaveFolder) {
+    vector<string> questionDelete; // Вы точно хотите удалить сохранение?
+    for (int i{ 23 }; i < 30; i++) questionDelete.push_back(gameText[i]);
+    int y{ 4 }, x{ 17 };
+    questionDelete[y][x] = '@';
+    while (true) {
+        system("cls"); printMenu(questionDelete);
+        int select = _getch(); if (select == 0 || select == 224) select = _getch();
+        questionDelete[y][x] = ' ';
+        
+        switch (select) {
+        case 75: { x = 17; break; } // Влево
+        case 77: { x = 28; break; } // Вправо
+        case 13: { 
+            if (x == 17) { system("cls"); exitMenu = true; break; } // Закрыть окно
+            else { // Удалить сохранение
+                string backSpace = "\\";
+                string path = directory; path += backSpace + nameSaveFolder;
+                clearFolder(path); exitMenu = true; break;
+            }}
+        case 27: { system("cls"); exitMenu = true; break; } // Закрыть окно
+        default: break;
+        }
+        
+        questionDelete[y][x] = '@';
+        if (exitMenu) { exitMenu = false; break; } // Закрыть окно
+    }
 }
 
 void printMap(vector <string> map) {
@@ -105,7 +137,7 @@ void printBag(vector <char> bag) {
 }
 
 void saveWindow() {
-    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 };
+    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 }; exitMenu = false;
     // Загрузка списка сохраненных игр в окне Сохранение
     for (int i{ 0 }; i < 4; i++) save[choice + i].replace(posX + 2, saveName[i].size(), saveName[i]);
     
@@ -113,7 +145,7 @@ void saveWindow() {
         system("cls");
         save[choice][posX] = '@';
         printMenu(save);
-        int select = _getch(); if (select == 0) select = _getch();
+        int select = _getch(); if (select == 0 || select == 224) select = _getch();
 
         int moveY{ 0 }; save[choice][posX] = ' ';
         switch (select) {
@@ -121,13 +153,24 @@ void saveWindow() {
         case 80: { if (choice < startPosY + 4) moveY = 1; track(14); /*GtaMenu*/ break; } // Вниз
         case 13: {
             if (choice <= startPosY + 3) { saveLineWindow(posX + 2, choice, startPosY); break; } // Сохранить игру
-            else { system("cls"); Menu(); break; } //Назад
+            else { system("cls"); exitMenu = true; break; } // Выход в меню
+            break;
         }
-        case 27: { system("cls"); Menu(); break; } //Назад
+        case 83: { // Удалить сохранение
+            if (saveName[choice - startPosY] != "---") {
+                deleteSave((saveName[4]).c_str(), saveName[choice - startPosY]);
+                saveName[choice - startPosY] = "---";
+                saveText((saveName[4]).c_str(), "SaveName.txt", saveName);
+                break;
+            }
+            else break;
+        }
+        case 27: { system("cls"); exitMenu = true; break; } // Выход в меню
         default: break;
         }
         if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
         save[choice - moveY][posX] = ' ';
+        if (exitMenu) break; // Выход в меню
     }
 }
 string saveGame(const char* directory, string nameSaveFolder) {
@@ -160,8 +203,9 @@ string saveGame(const char* directory, string nameSaveFolder) {
 }
 void saveLineWindow(int posX, int choice, int startPosY) {
     string backSlash = "/";
-    string path = saveName[saveName.size() - 1] + backSlash + saveName[choice - startPosY];
+    string path = saveName[saveName.size() - 2] + backSlash + saveName[choice - startPosY];
     if (saveName[choice - startPosY] != "---") clearFolder(path);
+    else { readText(gameText[18]); cout << endl; system("pause"); }
     string emptyName = "                           ";
     save[choice].replace(posX, emptyName.size(), emptyName);
     saveName[choice - startPosY] = saveGame();
@@ -170,7 +214,7 @@ void saveLineWindow(int posX, int choice, int startPosY) {
     saveText((SAVENAME.substr(0, 9)).c_str(), SAVENAME.substr(10, 21), saveName);
 }
 void loadWindow() {
-    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 };
+    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 }; exitMenu = false;
     // Загрузка списка сохраненных игр в окне Загрузка        
     for (int i{ 0 }; i < 4; i++) load[choice + i].replace(posX + 2, saveName[i].size(), saveName[i]);
 
@@ -178,26 +222,34 @@ void loadWindow() {
         system("cls");
         load[choice][posX] = '@';
         printMenu(load);
-        int select = _getch(); if (select == 0) select = _getch();
+        int select = _getch(); if (select == 0 || select == 224) select = _getch();
 
         int moveY{ 0 }; load[choice][posX] = ' ';
         switch (select) {
-        case 72: { if (choice > startPosY) moveY = -1; break; } // Вверх
-        case 80: { if (choice < startPosY + 4) moveY = 1; break; } // Вниз
+        case 72: { if (choice > startPosY) moveY = -1; track(14); /*GtaMenu*/ break; } // Вверх
+        case 80: { if (choice < startPosY + 4) moveY = 1; track(14); /*GtaMenu*/ break; } // Вниз
         case 13: {
             if (choice < startPosY + 4) { // Загрузить игру
                 checkStarGame = true;
-                loadGame(choice, startPosY); break; } 
-            else { system("cls"); Menu(); break; } //Назад
+                loadGame(choice, startPosY); break;
+            }
+            else { system("cls"); exitMenu = true; break; } // Выход в меню
         }
-        case 27: {
-            if (checkStarGame) { Game(); break; }
-            else { system("cls"); Menu(); break; }
-        } //Назад
+        case 83: { // Удалить сохранение
+            if (saveName[choice - startPosY] != "---") {
+                deleteSave((saveName[4]).c_str(), saveName[choice - startPosY]); 
+                saveName[choice - startPosY] = "---";
+                saveText((saveName[4]).c_str(), "SaveName.txt", saveName);
+                break;
+            }
+            else break;
+        }
+        case 27: { system("cls"); exitMenu = true; break; } // Выход в меню
         default: break;
         }
         if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
         load[choice - moveY][posX] = ' ';
+        if (exitMenu) break; // Выход в меню
     }
 }
 void loadGame(int choice, int startPosY) {
@@ -226,6 +278,60 @@ void loadGame(int choice, int startPosY) {
     flag = bool(stoi(source[11]));
     Game();
 }
+void settingsWindow() {
+    int startPosY{ 6 }, choice{ startPosY }, posX{ 17 }; exitMenu = false;
+    
+    while (true) {
+        system("cls");
+        settings[choice][posX] = '@';
+        printMenu(settings);
+        int select = _getch(); if (select == 0) select = _getch();
+
+        int moveY{ 0 }; settings[choice][posX] = ' ';
+        switch (select) {
+        case 72: { if (choice > startPosY) moveY = -1; track(14); /*GtaMenu*/ break; } // Вверх
+        case 80: { if (choice < startPosY + 4) moveY = 1; track(14); /*GtaMenu*/ break; } // Вниз
+        case 13: {
+            if (choice == startPosY) { settingSound(choice, posX); exitMenu = false; break; } // Настройка звука
+            else if (choice > startPosY && choice < startPosY + 4) { // Выбор настройки
+                cout << "Круто!\n"; break;
+            }
+            else { system("cls"); exitMenu = true; break; } // Выход в меню
+            break;
+        }
+        case 27: { system("cls"); exitMenu = true; break; } // Выход в меню
+        default: break;
+        }
+        if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
+        settings[choice - moveY][posX] = ' ';
+        if (exitMenu) break; // Выход в меню
+    }
+}
+void settingSound(int choice, int posX) {
+    settings[choice][posX] = '<'; settings[choice][posX + 12] = '>';
+    string lvlSound = to_string(soundLVL * 10) + "%";
+    while (true) {
+        lvlSound = to_string(soundLVL * 10) + "%  ";
+        settings[choice].replace(posX + 14, lvlSound.size(), lvlSound);
+        system("cls"); printMenu(settings);
+
+        int select = _getch(); if (select == 0 || select == 224) select = _getch();
+        
+        switch (select) {
+        case 77: { if (soundLVL < 10) soundLVL++; track(14); /*GtaMenu*/ break; } // Вверх
+        case 75: { if (soundLVL > 0) soundLVL--; track(14); /*GtaMenu*/ break; } // Вниз
+        case 27: { 
+            lvlSound = "      "; settings[choice].replace(posX + 12, lvlSound.size(), lvlSound);
+            settings[choice][posX + 12] = ' '; exitMenu = true; break; } // Назад
+        default: break;
+        }
+        setVolume(int(double(65535) * (double(soundLVL) * 10 / 100))); // 65535 - max
+
+        gameText[22] = to_string(soundLVL);
+        saveText("Text/Data/", "InfoText.txt", gameText);
+        if (exitMenu) break;
+    }   
+}
 
 void setVolume(unsigned int volume) {
     // Устанавливаем одинаковую громкость для обоих каналов (левый и правый)
@@ -236,6 +342,7 @@ void playTrack(const wstring& filePath) {
     // Напрямую используем Unicode-версию PlaySound
     PlaySoundW(filePath.c_str(), NULL, SND_FILENAME | SND_ASYNC);
 }
+//--------------------------------------------------------------------------------------Удалить и обновить на С++20
 void track(int num) {
     switch (num) {
     case 1: PlaySound(L"Sound/1.5Coins.wav", NULL, SND_FILENAME | SND_ASYNC); break;
@@ -289,8 +396,8 @@ string getTime() {
     return timeName;
 }
 
-int nextLVL(int code) {
-    if (maps[checkRoom][userY][userX + 1] == '>' && code == 77 && bag.size() >= coinsRoom[checkRoom]) {
+int nextLVL(int select) {
+    if (maps[checkRoom][userY][userX + 1] == '>' && select == 77 && bag.size() >= coinsRoom[checkRoom]) {
         checkRoom++;
         if (checkRoom > thisLvL || bag.size() == sumCoins) {
             system("cls"); thisLvL++;
@@ -306,22 +413,55 @@ int nextLVL(int code) {
         maps[checkRoom - 1][userY][userX] = ' ';
         userX = 1; return 1;
     }
-    else if (maps[checkRoom][userY][userX + 1] == '>' && code == 77 && bag.size() < coinsRoom[checkRoom]) {
-        code = 0; system("cls");
+    else if (maps[checkRoom][userY][userX + 1] == '>' && select == 77 && bag.size() < coinsRoom[checkRoom]) {
+        select = 0; system("cls");
         track(1); //5Coins
         cout << endl << endl; readText(gameText[10]); cout << endl << endl << endl; system("pause");
         track(5); //BloodMoney2
         return 0;
     }
-    else if (maps[checkRoom][userY][userX - 1] == '<' && code == 75) {
+    else if (maps[checkRoom][userY][userX - 1] == '<' && select == 75) {
         maps[checkRoom][userY][userX] = ' ';
         checkRoom--; userX = maps[checkRoom][userY].size() - 2; return 1;
     }
-    else return code;
+    else return select;
 }
-void move(int code) {
+int moveMenu(int select, int choice, int startPosY) {
+    int moveY{ 0 };
+    switch (select) {
+    case 72: { if (choice > startPosY) { moveY = -1; track(14); /*GtaMenu*/ } break; } // Вверх            
+    case 80: { if (choice < startPosY + 5) { moveY = 1; track(14); /*GtaMenu*/ } break; } // Вниз
+    case 13: {
+        if (choice == startPosY) {
+            if (checkStarGame == false && saveName[5] != "Empty") { checkStarGame = true; loadGame(5, 0); } // Продолжить с последнего сохранения
+            else if (checkStarGame == false) { track(26); readText(gameText[16]); cout << endl; system("pause"); break; }
+            else Game(); break;
+        } // Продолжить
+        else if (choice == startPosY + 1) { // Новая игра
+            checkStarGame = true; track(4); // BloodMoney
+            pathLvL = "Text/Data/"; addPathFiles();
+            createContent(); Game(); break;
+        }
+        else if (choice == startPosY + 2 && checkStarGame) { saveWindow(); break; } // Сохранить
+        else if (choice == startPosY + 2) { track(27); readText(gameText[17]); cout << endl; system("pause"); break; }
+        else if (choice == startPosY + 3) { // Загрузить
+            bool checkLoad{ false };
+            for (int i{ 0 }; i < 4; i++) if (saveName[i] != "---") checkLoad = true;
+            if (checkLoad) loadWindow();
+            else { track(28); readText(gameText[16]); cout << endl; system("pause"); } break;
+        }
+        else if (choice == startPosY + 4) { settingsWindow(); break; } // Настройки
+        else if (choice == startPosY + 5) { outGame = true; exitGame(); break; } // Выход
+        else break;
+    }
+    case 27: { if (checkStarGame) { Game(); break; } else break; }
+    default: break;
+    }
+    return moveY;
+}
+void moveGame(int select) {
     int moveX{ 0 }, moveY{ 0 };
-    switch (code) {
+    switch (select) {
         case 75: { moveX = -1; break; } // Влево
         case 77: { moveX = 1; break; } // Вправо
         case 72: { moveY = -1; break; } // Вверх
@@ -353,6 +493,27 @@ void move(int code) {
         }
     }
 }
+bool exitGame() {
+    if (outGame && !checkStarGame) {
+        system("cls");
+        track(7); // ByeBye
+        cout << endl << endl << endl << endl; readText(gameText[13]); cout << endl << endl << endl << endl;
+        system("pause"); system("cls"); return true;
+    }
+    else if (outGame && bag.size() >= 25) {
+        system("cls");
+        track(24); // WindowsXP
+        cout << endl << endl << endl << endl; readText(gameText[15]); cout << endl << endl << endl << endl;
+        system("pause"); system("cls"); return true;
+    } // Выход
+    else if (outGame) {
+        system("cls");
+        track(10); // CRY
+        cout << endl << endl << endl << endl; readText(gameText[14]); cout << endl << endl << endl << endl;
+        system("pause"); system("cls"); return true;
+    } // Выход
+    else return false;
+}
 
 //Директория и названия файлов
 string pathLvL = "Text/Data/";
@@ -361,10 +522,12 @@ vector <string> LvL;
 string sourceFile = "Source.txt";
 
 string infoText = "Text/Data/InfoText.txt";
-string MENU = "Text/Data/Menu.txt";
-string SAVE = "Text/Save/Save.txt";
-string SAVENAME = "Text/Save/SaveName.txt";
-string LOAD = "Text/Save/Load.txt";
+string SAVENAME = "Text/Data/SaveName.txt";
+string MENU = "Text/Windows/Menu.txt";
+string SAVE = "Text/Windows/Save.txt";
+string LOAD = "Text/Windows/Load.txt";
+string SETTINGS = "Text/Windows/Settings.txt";
+
 
 //Выгружаем Текст для игры и меню
 vector <string> gameText = loadText(gameText, infoText);
@@ -372,6 +535,7 @@ vector <string> menu = loadText(menu, MENU);
 vector <string> save = loadText(save, SAVE);
 vector <string> saveName = loadText(saveName, SAVENAME);
 vector <string> load = loadText(load, LOAD);
+vector <string> settings = loadText(settings, SETTINGS);
 
 //Выгружаем все карты и добавляем монеты
 vector <vector <string>> maps;
@@ -389,6 +553,8 @@ bool flag = false;
 
 //Проверка на Старт игры
 bool checkStarGame = false;
-bool exitGame = false;
+bool outGame = false;
 bool exitMenu = false;
 bool offMenu = true;
+
+int soundLVL = stoi(gameText[22]);

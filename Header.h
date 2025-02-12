@@ -13,7 +13,7 @@
 #include <io.h> // Для _access - проверка наличия папки
 #include <string>
 #include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
-#pragma comment(lib, "winmm.lib") // Подключение библиотеки winmm.lib
+#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume()
 using namespace std;
 
 void addPathFiles();
@@ -24,6 +24,7 @@ void readText(string Text);
 void createContent();
 void clearData();
 void clearFolder(const string& path);
+void deleteSave(const char* directory, string nameSaveFolder);
 
 void printMap(vector <string> map);
 void printMenu(vector <string> menu);
@@ -35,6 +36,8 @@ string saveGame(const char* directory = "Save", string nameSaveFolder = "Default
 void saveLineWindow(int posX, int choice, int startPosY);
 void loadWindow();
 void loadGame(int choice, int startPosY);
+void settingsWindow();
+void settingSound(int choice, int posX);
 void Game();
 
 void setVolume(unsigned int volume);
@@ -44,7 +47,9 @@ void track(int num);
 string getTime();
 
 int nextLVL(int code);
-void move(int code);
+int moveMenu(int select, int choice, int startPosY);
+void moveGame(int code);
+bool exitGame();
 
 #endif //Header
 
@@ -64,6 +69,7 @@ extern string MENU;
 extern string SAVE;
 extern string SAVENAME;
 extern string LOAD;
+extern string SETTINGS;
 
 //Выгружаем Текст для игры и меню
 extern vector <string> gameText;
@@ -71,6 +77,7 @@ extern vector <string> menu;
 extern vector <string> save;
 extern vector <string> saveName;
 extern vector <string> load;
+extern vector <string> settings;
 
 //Выгружаем все карты и добавляем монеты
 extern vector <vector <string>> maps;
@@ -88,8 +95,10 @@ extern bool flag;
 
 //Проверка на Старт игры
 extern bool checkStarGame;
-extern bool exitGame;
+extern bool outGame;
 extern bool exitMenu;
 extern bool offMenu;
+
+extern int soundLVL;
 
 #endif // GLOBAL_H
