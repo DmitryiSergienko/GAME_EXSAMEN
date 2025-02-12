@@ -82,14 +82,13 @@ void clearFolder(const string& path) {
 
         // Удаляем директорию и все её содержимое
         fs::remove_all(path);
-        readText(gameText[19]); cout << endl; system("pause");
     }
     catch (const fs::filesystem_error& e) { cerr << "Ошибка при удалении директории: " << e.what() << endl; }
 }
-void deleteSave(const char* directory, string nameSaveFolder) {
+int deleteSave(const char* directory, string nameSaveFolder) {
     vector<string> questionDelete; // Вы точно хотите удалить сохранение?
     for (int i{ 23 }; i < 30; i++) questionDelete.push_back(gameText[i]);
-    int y{ 4 }, x{ 17 };
+    int y{ 4 }, x{ 4 };
     questionDelete[y][x] = '@';
     while (true) {
         system("cls"); printMenu(questionDelete);
@@ -97,21 +96,29 @@ void deleteSave(const char* directory, string nameSaveFolder) {
         questionDelete[y][x] = ' ';
         
         switch (select) {
-        case 75: { x = 17; break; } // Влево
-        case 77: { x = 28; break; } // Вправо
+        case 75: {
+            if (x == 23) x = 13;
+            else if (x == 13) x = 4;
+            break; } // Влево
+        case 77: {
+            if (x == 4) x = 13;
+            else if (x == 13) x = 23;
+            break; } // Вправо
         case 13: { 
-            if (x == 17) { system("cls"); exitMenu = true; break; } // Закрыть окно
-            else { // Удалить сохранение
+            if (x == 4) { system("cls"); return 0; } // Закрыть окно
+            else if (x == 13){ // Удалить одно сохранение
                 string backSpace = "\\";
                 string path = directory; path += backSpace + nameSaveFolder;
-                clearFolder(path); exitMenu = true; break;
-            }}
-        case 27: { system("cls"); exitMenu = true; break; } // Закрыть окно
+                clearFolder(path); return 1; }
+            else if (x == 23) { // Удалить все сохранения
+                clearFolder(saveName[4]);
+                return 2; }
+            break;
+        }
+        case 27: { system("cls"); return 0; } // Закрыть окно
         default: break;
         }
-        
         questionDelete[y][x] = '@';
-        if (exitMenu) { exitMenu = false; break; } // Закрыть окно
     }
 }
 
@@ -158,12 +165,43 @@ void saveWindow() {
         }
         case 83: { // Удалить сохранение
             if (saveName[choice - startPosY] != "---") {
-                deleteSave((saveName[4]).c_str(), saveName[choice - startPosY]);
-                saveName[choice - startPosY] = "---";
-                saveText((saveName[4]).c_str(), "SaveName.txt", saveName);
-                break;
+                int check = deleteSave((saveName[4]).c_str(), saveName[choice - startPosY]);
+                
+                if (check == 0) break; // Выход в меню
+                else if (check == 1) {
+                    if (saveName[choice - startPosY] == saveName[5]) saveName[5] = "Empty"; // Очищаем сохранение для пункта Продолжить
+
+                    save[choice] = save[3]; // Удаляем одно сохранение
+                    load[choice] = load[3];
+                    saveName[choice - startPosY] = "---";
+                    save[choice].replace(posX + 2, saveName[choice - startPosY].size(), saveName[choice - startPosY]);
+                    load[choice].replace(posX + 2, saveName[choice - startPosY].size(), saveName[choice - startPosY]);
+                                        
+                    for (int i{ 0 }; i < 4; i++) if (saveName[i] != "---") saveName[5] = saveName[i]; // Добавляем сейв если есть для Продолжить
+
+                    saveText("Text/Data/", "SaveName.txt", saveName);
+                    system("cls"); printMenu(save);
+                    track(10); // CRY
+                    readText(gameText[30]); cout << endl; system("pause");
+                    break;
+                }
+                else if (check == 2) { // Удаляем все сохранения
+                    for (int i{ 0 }; i < 4; i++) {
+                        saveName[i] = "---";
+                        load[startPosY + i] = load[3];
+                        save[startPosY + i] = save[3];
+                        load[startPosY + i].replace(posX + 2, saveName[0].size(), saveName[0]);
+                        save[startPosY + i].replace(posX + 2, saveName[0].size(), saveName[0]);
+                    }
+                    saveName[5] = "Empty";
+                    saveText("Text/Data/", "SaveName.txt", saveName);
+                    system("cls"); printMenu(save);
+                    track(10); // CRY
+                    readText(gameText[31]); cout << endl; system("pause");
+                    break;
+                }
             }
-            else break;
+            else break; break;
         }
         case 27: { system("cls"); exitMenu = true; break; } // Выход в меню
         default: break;
@@ -204,7 +242,8 @@ string saveGame(const char* directory, string nameSaveFolder) {
 void saveLineWindow(int posX, int choice, int startPosY) {
     string backSlash = "/";
     string path = saveName[saveName.size() - 2] + backSlash + saveName[choice - startPosY];
-    if (saveName[choice - startPosY] != "---") clearFolder(path);
+    if (saveName[choice - startPosY] != "---") { clearFolder(path);
+        readText(gameText[19]); cout << endl; system("pause"); }
     else { readText(gameText[18]); cout << endl; system("pause"); }
     string emptyName = "                           ";
     save[choice].replace(posX, emptyName.size(), emptyName);
@@ -229,20 +268,52 @@ void loadWindow() {
         case 72: { if (choice > startPosY) moveY = -1; track(14); /*GtaMenu*/ break; } // Вверх
         case 80: { if (choice < startPosY + 4) moveY = 1; track(14); /*GtaMenu*/ break; } // Вниз
         case 13: {
-            if (choice < startPosY + 4) { // Загрузить игру
+            if ((choice < startPosY + 4) && saveName[choice - startPosY] != "---") { // Загрузить игру
                 checkStarGame = true;
                 loadGame(choice, startPosY); break;
             }
-            else { system("cls"); exitMenu = true; break; } // Выход в меню
+            else if (choice == startPosY + 4) { system("cls"); exitMenu = true; break; } // Выход в меню
+            else break;
         }
         case 83: { // Удалить сохранение
             if (saveName[choice - startPosY] != "---") {
-                deleteSave((saveName[4]).c_str(), saveName[choice - startPosY]); 
-                saveName[choice - startPosY] = "---";
-                saveText((saveName[4]).c_str(), "SaveName.txt", saveName);
-                break;
+                int check = deleteSave((saveName[4]).c_str(), saveName[choice - startPosY]);
+
+                if (check == 0) break; // Выход в меню
+                else if (check == 1) {
+                    if (saveName[choice - startPosY] == saveName[5]) saveName[5] = "Empty"; // Очищаем сохранение для пункта Продолжить
+                    
+                    save[choice] = save[3]; // Удаляем одно сохранение
+                    load[choice] = load[3];
+                    saveName[choice - startPosY] = "---";
+                    save[choice].replace(posX + 2, saveName[choice - startPosY].size(), saveName[choice - startPosY]);
+                    load[choice].replace(posX + 2, saveName[choice - startPosY].size(), saveName[choice - startPosY]);
+                    
+                    for (int i{ 0 }; i < 4; i++) if (saveName[i] != "---") saveName[5] = saveName[i]; // Добавляем сейв если есть для Продолжить
+                    
+                    saveText("Text/Data/", "SaveName.txt", saveName);
+                    system("cls"); printMenu(load);
+                    track(10); // CRY
+                    readText(gameText[30]); cout << endl; system("pause"); exitMenu = true;
+                    break;
+                }
+                else if (check == 2) { // Удаляем все сохранения
+                    for (int i{ 0 }; i < 4; i++) {
+                        saveName[i] = "---";
+                        load[startPosY + i] = load[3];
+                        save[startPosY + i] = save[3];
+                        load[startPosY + i].replace(posX + 2, saveName[0].size(), saveName[0]);
+                        save[startPosY + i].replace(posX + 2, saveName[0].size(), saveName[0]);
+                    }
+                    saveName[5] = "Empty";
+                    saveText("Text/Data/", "SaveName.txt", saveName);
+                    system("cls"); printMenu(load);
+                    track(10); // CRY
+                    readText(gameText[31]); cout << endl; system("pause"); exitMenu = true;
+                    break;
+                }
             }
-            else break;
+            else break; break;
         }
         case 27: { system("cls"); exitMenu = true; break; } // Выход в меню
         default: break;
@@ -290,10 +361,10 @@ void settingsWindow() {
         int moveY{ 0 }; settings[choice][posX] = ' ';
         switch (select) {
         case 72: { if (choice > startPosY) moveY = -1; track(14); /*GtaMenu*/ break; } // Вверх
-        case 80: { if (choice < startPosY + 4) moveY = 1; track(14); /*GtaMenu*/ break; } // Вниз
+        case 80: { if (choice < startPosY + 5) moveY = 1; track(14); /*GtaMenu*/ break; } // Вниз
         case 13: {
             if (choice == startPosY) { settingSound(choice, posX); exitMenu = false; break; } // Настройка звука
-            else if (choice > startPosY && choice < startPosY + 4) { // Выбор настройки
+            else if (choice > startPosY && choice < startPosY + 5) { // Выбор настройки
                 cout << "Круто!\n"; break;
             }
             else { system("cls"); exitMenu = true; break; } // Выход в меню
@@ -302,7 +373,7 @@ void settingsWindow() {
         case 27: { system("cls"); exitMenu = true; break; } // Выход в меню
         default: break;
         }
-        if (choice >= startPosY && choice <= startPosY + 4) choice += moveY;
+        if (choice >= startPosY && choice <= startPosY + 5) choice += moveY;
         settings[choice - moveY][posX] = ' ';
         if (exitMenu) break; // Выход в меню
     }

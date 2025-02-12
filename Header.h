@@ -24,7 +24,7 @@ void readText(string Text);
 void createContent();
 void clearData();
 void clearFolder(const string& path);
-void deleteSave(const char* directory, string nameSaveFolder);
+int deleteSave(const char* directory, string nameSaveFolder);
 
 void printMap(vector <string> map);
 void printMenu(vector <string> menu);
