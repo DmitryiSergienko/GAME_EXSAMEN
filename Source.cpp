@@ -9,8 +9,10 @@
 #include <filesystem> // Для удаления папки
 #include <io.h> // Для _access - проверка наличия папки
 #include <string>
-#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
-#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume()
+#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume() - Удалить
+#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume() - Удалить
+#include <thread> // Для многопотока
+#include <SFML/Audio.hpp> // Для подключения SFML (audio)
 #include "Header.h"
 using namespace std;
 namespace fs = std::filesystem;
@@ -468,6 +470,21 @@ void setVolume(unsigned int volume) {
     // Устанавливаем одинаковую громкость для обоих каналов (левый и правый)
     unsigned long vol = static_cast<unsigned long>(volume | (volume << 16));
     waveOutSetVolume(NULL, vol); // NULL указывает на использование текущего устройства вывода
+}
+void playMusic(const string& filename) {
+    sf::Music music;
+    if (!music.openFromFile(filename)) {
+        cerr << "Error loading music file: " << filename << endl;
+        return;
+    }
+
+    cout << "Playing: " << filename << endl;
+    music.play();
+
+    // Ждём завершения воспроизведения
+    while (music.getStatus() == sf::Music::Status::Playing) {
+        this_thread::sleep_for(chrono::milliseconds(100));
+    }
 }
 void playTrack(const wstring& filePath) {
     // Напрямую используем Unicode-версию PlaySound

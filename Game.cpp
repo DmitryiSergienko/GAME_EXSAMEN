@@ -9,8 +9,10 @@
 #include <shellapi.h> // Для удаления папки
 #include <io.h> // Для _access - проверка наличия папки
 #include <string>
-#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume()
-#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume()
+#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume() - Удалить
+#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume() - Удалить
+#include <thread> // Для многопотока
+#include <SFML/Audio.hpp> // Для подключения SFML (audio)
 #include "Header.h"
 using namespace std;
 
