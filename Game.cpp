@@ -14,7 +14,6 @@
 #include "Header.h"
 using namespace std;
 
-// Добавить цвета
 // Добавить жизни и при взаимодействии с ловушкой отнимать их - мины и падение с моста
 // Добавить уровень с минами
 // Добавить секретный магазин
@@ -27,6 +26,7 @@ using namespace std;
 // Добавить босс-вертолет (механика: 1 стадия - 1 линия, 2 стадия - крест, 3 стадия - сетка)
 // Добавить возможность покупать HP
 // Добавить мена цвета, уровень сложности, режим рогалик
+// Доработать пункт Настройки
 
 void Menu() {
     addPathFiles(); // Добавляем путь к файлам
@@ -35,6 +35,7 @@ void Menu() {
     
     int startPosY{ 6 }, choice{ startPosY }, posX{ 17 };
     while (true) {
+        setColor(0x0B);
         system("cls");
         menu[choice][posX] = '@';
         printMenu(menu);
@@ -47,7 +48,7 @@ void Menu() {
         menu[choice - moveY][posX] = ' ';
 
         if (outGame) break;
-    }
+    } setColor(0x07);
 }
 
 void Game() {
@@ -62,7 +63,7 @@ void Game() {
                 system("pause"); bag.push_back('G'); bag.push_back('G'); bag.push_back('W'); bag.push_back('P'); system("cls");
             }
             maps[checkRoom][userY][userX] = '@';
-            printMap(maps[checkRoom]);
+            printMap(maps[checkRoom], 1, 0);
             printBag(bag);
 
             int select = _getch(); if (select == 0 || select == 224) select = _getch();

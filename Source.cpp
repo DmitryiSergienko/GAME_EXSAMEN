@@ -126,12 +126,42 @@ int deleteSave(const char* directory, string nameSaveFolder) {
     }
 }
 
+void setColor(int color) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, color);
+}
 void printMap(vector <string> map) {
     for (int i = 0; i < map.size(); i++) {
         for (int j = 0; j < map[i].size(); j++) {
             cout << map[i][j] << " ";
         } cout << endl;
     } cout << endl << endl;
+}
+void printMap(vector <string> map, int sizeMap, int colorType) {
+    for (int y = 0; y < map.size(); y++) {
+        for (int spaceY{ 0 }; spaceY < sizeMap; spaceY++) {
+            for (int x = 0; x < map[y].size(); x++) {
+                for (int spaceX{ 0 }; spaceX < (2 * sizeMap); spaceX++) {
+                    if(map[y][x] == '#') setColor(0x88);         // Темно-серый - 136
+                    else if (map[y][x] == ' ')  setColor(0x77);  // Светло-серый - 119
+                    else if (map[y][x] == '@')  setColor(0xCC);  // Малиновый - 204
+                    else if (map[y][x] == '!')  setColor(0xDD);  // Розовый - 221
+                    else if (map[y][x] == '$')  setColor(0x67);  // Желтый фон и светлосерый текст - 103
+                    else if (map[y][x] == 'X')  setColor(0x77);  // Светло-серый - 119
+                    else if (map[y][x] == 'S')  setColor(0x67);  // Желтый фон и светлосерый текст - 103
+                    else if (map[y][x] == '>')  setColor(0x55);  // Фиолетовый - 85
+                    else if (map[y][x] == '<')  setColor(0x55);  // Фиолетовый - 85
+                    else if (map[y][x] == 'H')  setColor(0x00);  // Черный - 0
+                    else if (map[y][x] == 'W')  setColor(0x11);  // Синий - 17
+                    else if (map[y][x] == 'M')  setColor(0x22);  // Зеленый - 34
+                    else if (map[y][x] == 'G')  setColor(0x22);  // Зеленый - 34
+                    cout << map[y][x];
+                    setColor(0x70);
+                }
+            } cout << endl;
+        }
+    } cout << endl << endl;
+    setColor(0x07); // Возвращение к стандартным настройкам
 }
 void printMenu(vector <string> menu) {
     for (int i = 0; i < menu.size(); i++) {
@@ -141,10 +171,12 @@ void printMenu(vector <string> menu) {
     } cout << endl << endl;
 }
 void printBag(vector <char> bag) {
-    cout << "Количество $: " << bag.size() << endl;
-    for (int i = 0; i < bag.size(); i++) {
+    setColor(0x06);  // Желтый текст - 103
+    cout << "Монет $: " << bag.size() << endl;
+    /*for (int i = 0; i < bag.size(); i++) {
         cout << bag[i];
-    } cout << endl;
+    } cout << endl;*/
+    setColor(0x07); // Возвращение к стандартным настройкам
 }
 
 void saveWindow() {
@@ -657,3 +689,5 @@ bool exitMenu = false;
 bool offMenu = true;
 
 int soundLVL = stoi(gameText[22]);
+
+HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);

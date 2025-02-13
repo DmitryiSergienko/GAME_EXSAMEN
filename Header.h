@@ -27,7 +27,9 @@ void clearFolder(const string& path);
 bool folderExists(const string& path);
 int deleteSave(const char* directory, string nameSaveFolder);
 
+void setColor(int color);
 void printMap(vector <string> map);
+void printMap(vector <string> map, int sizeMap, int colorType);
 void printMenu(vector <string> menu);
 void printBag(vector <char> bag);
 
@@ -102,5 +104,7 @@ extern bool exitMenu;
 extern bool offMenu;
 
 extern int soundLVL;
+
+extern HANDLE hConsole;
 
 #endif // GLOBAL_H
