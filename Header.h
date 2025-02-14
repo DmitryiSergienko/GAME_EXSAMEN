@@ -19,6 +19,8 @@
 #include <SFML/Audio.hpp> // Для подключения SFML (audio)
 #include <chrono> // Для управлением времени
 #include "MusicPlayer.h"
+#include "Trap.h"
+#include "Human.h"
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -38,6 +40,7 @@ void printMap(vector <string> map);
 void printMap(vector <string> map, int sizeMap, int colorType);
 void printMenu(vector <string> menu);
 void printBag(vector <char> bag);
+void printHP(int HP);
 
 void Menu();
 void Game();
@@ -62,17 +65,16 @@ int nextLVL(int code);
 int moveMenu(int select, int choice, int startPosY);
 void moveGame(int code);
 bool exitGame();
+bool deathGG(int HP);
 
-void ppp();
-
-#endif //Header
+#endif // Header
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-//Директория и названия файлов
+// Директория и названия файлов
 extern string pathLvL;
 extern vector <string> LvLFiles;
 extern vector <string> LvL;
@@ -85,7 +87,7 @@ extern string SAVENAME;
 extern string LOAD;
 extern string SETTINGS;
 
-//Выгружаем Текст для игры и меню
+// Выгружаем Текст для игры и меню
 extern vector <string> gameText;
 extern vector <string> menu;
 extern vector <string> save;
@@ -93,35 +95,46 @@ extern vector <string> saveName;
 extern vector <string> load;
 extern vector <string> settings;
 
-//Выгружаем все карты и добавляем монеты
+// Выгружаем все карты и добавляем монеты
 extern vector <vector <string>> maps;
 extern vector <int> coinsRoom;
 extern int Coins;
 extern int sumCoins;
 extern vector <char> bag;
 
-//Интерфейс
+// Интерфейс
 extern int userX;
 extern int userY;
 extern int checkRoom;
 extern int thisLvL;
 extern bool flag;
 
-//Проверка на Старт игры
+// Проверка на Старт игры
 extern bool checkStarGame;
 extern bool outGame;
 extern bool exitMenu;
 extern bool offMenu;
 
+// Музыка
 extern int soundLVL;
+extern vector<string> tracks;
 extern MusicPlayer player;
 extern MusicPlayer playerLvL1;
 extern MusicPlayer playerLvL2;
 extern MusicPlayer playerLvL3;
 extern MusicPlayer playerLvL4;
 extern MusicPlayer playerLvL5;
-extern vector<string> tracks;
 
+// Цвета
 extern HANDLE hConsole;
+
+// Ловушки
+extern fakeDollar FakeDollar;
+extern water Water;
+extern mine Mine;
+extern bridge Bridge;
+
+// Человеки
+extern GG GiGa;
 
 #endif // GLOBAL_H

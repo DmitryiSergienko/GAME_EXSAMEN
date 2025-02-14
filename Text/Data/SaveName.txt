@@ -1,6 +1,6 @@
-2025_2_14_15_10_19
-2025_2_14_15_51_36
 ---
 ---
-C:\Users\Sergienko\source\repos\GAME_EXSAMEN\Save
-2025_2_14_15_51_36
+---
+---
+C:\Users\Sergienko\source\repos\GAME_EXSAMEN\Save\Test
+Empty

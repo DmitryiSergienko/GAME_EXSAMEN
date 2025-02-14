@@ -17,6 +17,8 @@
 #include <chrono> // Для управлением времени
 #include "Header.h"
 #include "MusicPlayer.h"
+#include "Trap.h"
+#include "Human.h"
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -39,7 +41,7 @@ void Menu() {
     while (true) {
         setColor(0x0B);
         system("cls");
-        menu[choice][posX] = '@';
+        menu[choice][posX] = GiGa.getAvatar();
         printMenu(menu);
         int select = _getch(); if (select == 0 || select == 224) select = _getch();
         
@@ -66,8 +68,9 @@ void Game() {
                 system("pause"); bag.push_back('G'); bag.push_back('G'); bag.push_back('W'); bag.push_back('P'); system("cls");
                 playerLvL5.stop();
             }
-            maps[checkRoom][userY][userX] = '@';
+            maps[checkRoom][userY][userX] = GiGa.getAvatar();
             printMap(maps[checkRoom], 1, 0);
+            printHP(GiGa.getHP());
             printBag(bag);
 
             int select = _getch(); if (select == 0 || select == 224) select = _getch();
@@ -76,6 +79,7 @@ void Game() {
             int checkCode = nextLVL(select);// Переход на новый уровень
             if (checkCode != 1) select = checkCode;
             moveGame(select); system("cls"); // Ходьба
+            if (deathGG(GiGa.getHP())) break;; // Смерть ГГ
         } 
         if (bag.size() == sumCoins) break; // Победа
         if (exitMenu) { track(14); /*GtaMenu*/ system("cls"); Menu(); break; } // Выход в меню

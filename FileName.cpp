@@ -17,6 +17,8 @@
 #include <chrono> // Для управлением времени
 #include "Header.h"
 #include "MusicPlayer.h"
+#include "Trap.h"
+#include "Human.h"
 using namespace std;
 namespace fs = std::filesystem;
 

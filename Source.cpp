@@ -17,6 +17,8 @@
 #include <chrono> // Для управлением времени
 #include "Header.h"
 #include "MusicPlayer.h"
+#include "Trap.h"
+#include "Human.h"
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -98,7 +100,7 @@ int deleteSave(const char* directory, string nameSaveFolder) {
     vector<string> questionDelete; // Вы точно хотите удалить сохранение?
     for (int i{ 23 }; i < 30; i++) questionDelete.push_back(gameText[i]);
     int y{ 4 }, x{ 4 };
-    questionDelete[y][x] = '@';
+    questionDelete[y][x] = GiGa.getAvatar();
     while (true) {
         system("cls"); printMenu(questionDelete);
         int select = _getch(); if (select == 0 || select == 224) select = _getch();
@@ -127,7 +129,7 @@ int deleteSave(const char* directory, string nameSaveFolder) {
         case 27: { system("cls"); return 0; } // Закрыть окно
         default: break;
         }
-        questionDelete[y][x] = '@';
+        questionDelete[y][x] = GiGa.getAvatar();
     }
 }
 
@@ -149,17 +151,19 @@ void printMap(vector <string> map, int sizeMap, int colorType) {
                 for (int spaceX{ 0 }; spaceX < (2 * sizeMap); spaceX++) {
                     if(map[y][x] == '#') setColor(0x88);         // Темно-серый - 136
                     else if (map[y][x] == ' ')  setColor(0x77);  // Светло-серый - 119
-                    else if (map[y][x] == '@')  setColor(0xCC);  // Малиновый - 204
+                    else if (map[y][x] == GiGa.getAvatar())  setColor(GiGa.getColor());  // Малиновый - 204
                     else if (map[y][x] == '!')  setColor(0xDD);  // Розовый - 221
-                    else if (map[y][x] == '$')  setColor(0x67);  // Желтый фон и светлосерый текст - 103
+                    else if (map[y][x] == '$')  setColor(0x67);  // // Желтый фон и светлосерый текст - 103
                     else if (map[y][x] == 'X')  setColor(0x77);  // Светло-серый - 119
-                    else if (map[y][x] == 'S')  setColor(0x67);  // Желтый фон и светлосерый текст - 103
+                    else if (map[y][x] == FakeDollar.getIcon())  setColor(FakeDollar.getColor());  // Желтый фон и светлосерый текст - 103
                     else if (map[y][x] == '>')  setColor(0x55);  // Фиолетовый - 85
                     else if (map[y][x] == '<')  setColor(0x55);  // Фиолетовый - 85
                     else if (map[y][x] == 'H')  setColor(0x00);  // Черный - 0
-                    else if (map[y][x] == 'W')  setColor(0x11);  // Синий - 17
-                    else if (map[y][x] == 'M')  setColor(0x22);  // Зеленый - 34
+                    else if (map[y][x] == Water.getIcon())  setColor(Water.getColor());  // Синий - 17
+                    else if (map[y][x] == Mine.getIcon())  setColor(Mine.getColor());  // Зеленый - 34
                     else if (map[y][x] == 'G')  setColor(0x22);  // Зеленый - 34
+                    else if (map[y][x] == 'R')  setColor(0x44);  // Красный - 68
+                    else if (map[y][x] == Bridge.getIcon())  setColor(Bridge.getColor());  // Светло-серый - 119
                     cout << map[y][x];
                     setColor(0x70);
                 }
@@ -176,11 +180,19 @@ void printMenu(vector <string> menu) {
     } cout << endl << endl;
 }
 void printBag(vector <char> bag) {
-    setColor(0x06);  // Желтый текст - 103
+    setColor(0x06);  // Желтый текст - 6
     cout << "Монет $: " << bag.size() << endl;
     /*for (int i = 0; i < bag.size(); i++) {
         cout << bag[i];
     } cout << endl;*/
+    setColor(0x07); // Возвращение к стандартным настройкам
+}
+void printHP(int HP) {
+    setColor(0x04);  // Красный текст - 4
+    cout << "HP: ";
+    for (int i = 0; i < HP; i++) {
+        cout << '@';
+    } cout << endl;
     setColor(0x07); // Возвращение к стандартным настройкам
 }
 
@@ -191,7 +203,7 @@ void saveWindow() {
     
     while (true) {
         system("cls");
-        save[choice][posX] = '@';
+        save[choice][posX] = GiGa.getAvatar();
         printMenu(save);
         int select = _getch(); if (select == 0 || select == 224) select = _getch();
 
@@ -276,6 +288,7 @@ string saveGame(const char* directory, string nameSaveFolder) {
     source.push_back("Координата по Y"); source.push_back(to_string(userY));
     source.push_back("Номер уровня"); source.push_back(to_string(thisLvL));
     source.push_back("Проверка флага"); source.push_back(to_string(flag));
+    source.push_back("HP GG"); source.push_back(to_string(GiGa.getHP()));
 
     saveText(path, "Source.txt", source); // Сохранение всех ресурсов и состояния элементов
     return nameSaveInWindow;
@@ -300,7 +313,7 @@ void loadWindow() {
 
     while (true) {
         system("cls");
-        load[choice][posX] = '@';
+        load[choice][posX] = GiGa.getAvatar();
         printMenu(load);
         int select = _getch(); if (select == 0 || select == 224) select = _getch();
 
@@ -390,6 +403,7 @@ void loadGame(int choice, int startPosY, int posX) {
         userY = stoi(source[7]);
         thisLvL = stoi(source[9]);
         flag = bool(stoi(source[11]));
+        GiGa.setHP(stoi(source[13]));
         Game();
     }
     catch (const char* err) { cerr << err << endl;
@@ -410,7 +424,7 @@ void settingsWindow() {
     
     while (true) {
         system("cls");
-        settings[choice][posX] = '@';
+        settings[choice][posX] = GiGa.getAvatar();
         printMenu(settings);
         int select = _getch(); if (select == 0) select = _getch();
 
@@ -596,17 +610,19 @@ int moveMenu(int select, int choice, int startPosY) {
     case 80: { if (choice < startPosY + 5) { moveY = 1; track(14); /*GtaMenu*/ } break; } // Вниз
     case 13: {
         if (choice == startPosY) {
-            if (checkStarGame == false && saveName[5] != "Empty") { 
+            if (checkStarGame == false && saveName[5] != "Empty" && GiGa.getHP() > 0) {
                 checkStarGame = true; player.start(); /*BloodMoney*/ loadGame(5, 0, 0);
                 break; } // Продолжить с последнего сохранения
             else if (checkStarGame == false) { track(26); readText(gameText[16]); cout << endl; system("pause"); break; }
-            else { player.resume(); /*BloodMoney*/ Game(); break; }
+            else if (GiGa.getHP() == 0) { track(26); readText(gameText[17]); cout << endl; system("pause"); break; }
+            else if (GiGa.getHP() > 0) { player.resume(); /*BloodMoney*/ Game(); break; }
         } // Продолжить
         else if (choice == startPosY + 1) { // Новая игра
+            exitMenu = false; GiGa.setHP(10);
             checkStarGame = true; pathLvL = "Text/Data/"; addPathFiles();
             player.start(); /*BloodMoney*/ createContent(); Game(); break;
         }
-        else if (choice == startPosY + 2 && checkStarGame) { saveWindow(); break; } // Сохранить
+        else if (choice == startPosY + 2 && checkStarGame && GiGa.getHP() > 0) { saveWindow(); break; } // Сохранить
         else if (choice == startPosY + 2) { track(27); readText(gameText[17]); cout << endl; system("pause"); break; }
         else if (choice == startPosY + 3) { // Загрузить
             bool checkLoad{ false };
@@ -633,10 +649,34 @@ void moveGame(int select) {
         default: break;
     } 
     if (maps[checkRoom][userY + moveY][userX + moveX] != '#') {
-        //Ловушка - портал
+        //Ловушка - Фейковый доллар
         bool check = true;
-        if (maps[checkRoom][userY + moveY][userX + moveX] == 'S') {
-            track(15); //Hurt
+        if (maps[checkRoom][userY + moveY][userX + moveX] == FakeDollar.getIcon()) {
+            GiGa.setHP(GiGa.getHP() - 1);
+            track(FakeDollar.getNumTrack()); //Hurt
+            if (flag) { maps[checkRoom][userY][userX] = 'X'; flag = 0; }
+            else maps[checkRoom][userY][userX] = ' ';
+            userX = 1; system("cls"); check = false;
+        }//Ловушка - Вода
+        else if (maps[checkRoom][userY + moveY][userX + moveX] == Water.getIcon()) {
+            GiGa.setHP(GiGa.getHP() - 1);
+            track(Water.getNumTrack()); //Hurt
+            if (flag) { maps[checkRoom][userY][userX] = 'X'; flag = 0; }
+            else maps[checkRoom][userY][userX] = ' ';
+            userX = 1; system("cls"); check = false;
+        }//Ловушка - Мина
+        else if (maps[checkRoom][userY + moveY][userX + moveX] == Mine.getIcon()) {
+            GiGa.setHP(GiGa.getHP() - 1);
+            maps[checkRoom][userY + moveY][userX + moveX] = 'R';
+            track(Mine.getNumTrack()); //Hurt
+            if (flag) { maps[checkRoom][userY][userX] = 'X'; flag = 0; }
+            else maps[checkRoom][userY][userX] = ' ';
+            userX = 1; system("cls"); check = false;
+        }//Ловушка - Мост
+        else if (maps[checkRoom][userY + moveY][userX + moveX] == Bridge.getIcon()) {
+            GiGa.setHP(GiGa.getHP() - 1);
+            maps[checkRoom][userY + moveY][userX + moveX] = Water.getIcon();
+            track(Bridge.getNumTrack()); //Hurt
             if (flag) { maps[checkRoom][userY][userX] = 'X'; flag = 0; }
             else maps[checkRoom][userY][userX] = ' ';
             userX = 1; system("cls"); check = false;
@@ -678,8 +718,16 @@ bool exitGame() {
     } // Выход
     else return false;
 }
+bool deathGG(int HP) { 
+    if (HP == 0) { 
+        exitMenu = true; 
+        player.pause(); track(10);
+        cout << endl << endl << endl; readText(gameText[35]); cout << endl << endl << endl; system("pause");
+        return true; } 
+    return false; 
+}
 
-//Директория и названия файлов
+// Директория и названия файлов
 string pathLvL = "Text/Data/";
 vector <string> LvLFiles = { "LvL1.txt","LvL2.txt", "LvL3.txt", "LvL4.txt", "LvL5.txt" };
 vector <string> LvL;
@@ -693,7 +741,7 @@ string LOAD = "Text/Windows/Load.txt";
 string SETTINGS = "Text/Windows/Settings.txt";
 
 
-//Выгружаем Текст для игры и меню
+// Выгружаем Текст для игры и меню
 vector <string> gameText = loadText(gameText, infoText);
 vector <string> menu = loadText(menu, MENU);
 vector <string> save = loadText(save, SAVE);
@@ -701,26 +749,27 @@ vector <string> saveName = loadText(saveName, SAVENAME);
 vector <string> load = loadText(load, LOAD);
 vector <string> settings = loadText(settings, SETTINGS);
 
-//Выгружаем все карты и добавляем монеты
+// Выгружаем все карты и добавляем монеты
 vector <vector <string>> maps;
 vector <int> coinsRoom;
 int Coins = 5;
 int sumCoins;
 vector <char> bag;
 
-//Интерфейс
+// Интерфейс
 int userX = 1;
 int userY = 1;
 int checkRoom = 0;
 int thisLvL = 0;
 bool flag = false;
 
-//Проверка на Старт игры
+// Проверка на Старт игры
 bool checkStarGame = false;
 bool outGame = false;
 bool exitMenu = false;
 bool offMenu = true;
 
+// Музыка
 int soundLVL = stoi(gameText[22]);
 vector<string> tracks = {
     "C:/Users/Sergienko/source/repos/GAME_EXSAMEN/Sound/4.BloodMoney.wav",
@@ -737,4 +786,14 @@ MusicPlayer playerLvL3(tracks[3]);
 MusicPlayer playerLvL4(tracks[4]);
 MusicPlayer playerLvL5(tracks[5]);
 
+// Цвета
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+// Ловушки
+fakeDollar FakeDollar;
+water Water;
+mine Mine;
+bridge Bridge;
+
+// Человеки
+GG GiGa;

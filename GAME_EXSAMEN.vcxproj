@@ -139,12 +139,16 @@
   <ItemGroup>
     <ClCompile Include="FileName.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Human.cpp" />
     <ClCompile Include="MusicPlayer.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="Trap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Header.h" />
+    <ClInclude Include="Human.h" />
     <ClInclude Include="MusicPlayer.h" />
+    <ClInclude Include="Trap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
