@@ -7,13 +7,16 @@
 #include <fstream>
 #include <direct.h> // Для создания папки
 #include <filesystem> // Для удаления папки
+#include <shellapi.h> // Для удаления папки
 #include <io.h> // Для _access - проверка наличия папки
 #include <string>
-#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume() - Удалить
-#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume() - Удалить
+#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume() - (Старое)
+#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume() - (Старое)
 #include <thread> // Для многопотока
 #include <SFML/Audio.hpp> // Для подключения SFML (audio)
+#include <chrono> // Для управлением времени
 #include "Header.h"
+#include "MusicPlayer.h"
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -307,7 +310,7 @@ void loadWindow() {
         case 80: { if (choice < startPosY + 4) moveY = 1; track(14); /*GtaMenu*/ break; } // Вниз
         case 13: {
             if ((choice < startPosY + 4) && saveName[choice - startPosY] != "---") { // Загрузить игру
-                checkStarGame = true;
+                checkStarGame = true; player.start(); /*BloodMoney*/
                 loadGame(choice, startPosY, posX); break;
             }
             else if (choice == startPosY + 4) { system("cls"); exitMenu = true; break; } // Выход в меню
@@ -471,26 +474,30 @@ void setVolume(unsigned int volume) {
     unsigned long vol = static_cast<unsigned long>(volume | (volume << 16));
     waveOutSetVolume(NULL, vol); // NULL указывает на использование текущего устройства вывода
 }
-void playMusic(const string& filename) {
-    sf::Music music;
-    if (!music.openFromFile(filename)) {
-        cerr << "Error loading music file: " << filename << endl;
+void playMusic(const string& musicFile) {
+    // Функция для воспроизведения одного файла
+    sf::SoundBuffer buffer; // Буфер для хранения звуковых данных
+    if (!buffer.loadFromFile(musicFile)) {
+        cout << "Error loading sound file: " << musicFile << endl;
         return;
     }
 
-    cout << "Playing: " << filename << endl;
-    music.play();
+    sf::Sound sound(buffer); // Создаем объект Sound, связанный с буфером
+    sound.play(); // Начинаем воспроизведение
 
-    // Ждём завершения воспроизведения
-    while (music.getStatus() == sf::Music::Status::Playing) {
-        this_thread::sleep_for(chrono::milliseconds(100));
-    }
+    // Ждем, пока звук не завершится
+    while (sound.getStatus() == sf::Sound::Status::Playing)
+        this_thread::sleep_for(chrono::milliseconds(100)); // Небольшая задержка
+}
+void playMusicQueue(const vector<string>& musicFiles) {
+    // Функция для воспроизведения очереди треков
+    for (const auto& file : musicFiles) 
+        playMusic(file);
 }
 void playTrack(const wstring& filePath) {
     // Напрямую используем Unicode-версию PlaySound
     PlaySoundW(filePath.c_str(), NULL, SND_FILENAME | SND_ASYNC);
 }
-//--------------------------------------------------------------------------------------Удалить и обновить на С++20
 void track(int num) {
     switch (num) {
     case 1: PlaySound(L"Sound/1.5Coins.wav", NULL, SND_FILENAME | SND_ASYNC); break;
@@ -550,13 +557,22 @@ int nextLVL(int select) {
         if (checkRoom > thisLvL || bag.size() == sumCoins) {
             system("cls"); thisLvL++;
             switch (thisLvL) {
-                case 1: { track(2); break; }  //AnimeWow
-                case 2: { track(13); break; } //GiveYouUp
-                case 3: { track(8); break; } //CatRap
-                case 4: { track(16); break; } //Initial_D
+                case 1: { player.pause(); /*BloodMoney*/ playerLvL1.start(); break; }  //AnimeWow
+                case 2: { player.pause(); /*BloodMoney*/ playerLvL2.start(); break; } //GiveYouUp
+                case 3: { player.pause(); /*BloodMoney*/ playerLvL3.start(); break; } //CatRap
+                case 4: { player.pause(); /*BloodMoney*/ playerLvL4.start(); break; } //Initial_D
                 default: break;
             }
-            cout << endl << endl; readText(gameText[11]); cout << endl << endl << endl; system("pause");
+            cout << endl << endl; readText(gameText[11]); cout << endl << endl << endl; 
+            system("pause");
+            switch (thisLvL) {
+                case 1: { playerLvL1.stop(); break; }  //AnimeWow
+                case 2: { playerLvL2.stop(); break; } //GiveYouUp
+                case 3: { playerLvL3.stop(); break; } //CatRap
+                case 4: { playerLvL4.stop(); break; } //Initial_D
+            default: break;
+            }
+            /*this_thread::sleep_for(chrono::seconds(1));*/ player.resume();
         }
         maps[checkRoom - 1][userY][userX] = ' ';
         userX = 1; return 1;
@@ -565,7 +581,6 @@ int nextLVL(int select) {
         select = 0; system("cls");
         track(1); //5Coins
         cout << endl << endl; readText(gameText[10]); cout << endl << endl << endl; system("pause");
-        track(5); //BloodMoney2
         return 0;
     }
     else if (maps[checkRoom][userY][userX - 1] == '<' && select == 75) {
@@ -581,14 +596,15 @@ int moveMenu(int select, int choice, int startPosY) {
     case 80: { if (choice < startPosY + 5) { moveY = 1; track(14); /*GtaMenu*/ } break; } // Вниз
     case 13: {
         if (choice == startPosY) {
-            if (checkStarGame == false && saveName[5] != "Empty") { checkStarGame = true; loadGame(5, 0, 0); } // Продолжить с последнего сохранения
+            if (checkStarGame == false && saveName[5] != "Empty") { 
+                checkStarGame = true; player.start(); /*BloodMoney*/ loadGame(5, 0, 0);
+                break; } // Продолжить с последнего сохранения
             else if (checkStarGame == false) { track(26); readText(gameText[16]); cout << endl; system("pause"); break; }
-            else Game(); break;
+            else { player.resume(); /*BloodMoney*/ Game(); break; }
         } // Продолжить
         else if (choice == startPosY + 1) { // Новая игра
-            checkStarGame = true; track(4); // BloodMoney
-            pathLvL = "Text/Data/"; addPathFiles();
-            createContent(); Game(); break;
+            checkStarGame = true; pathLvL = "Text/Data/"; addPathFiles();
+            player.start(); /*BloodMoney*/ createContent(); Game(); break;
         }
         else if (choice == startPosY + 2 && checkStarGame) { saveWindow(); break; } // Сохранить
         else if (choice == startPosY + 2) { track(27); readText(gameText[17]); cout << endl; system("pause"); break; }
@@ -602,7 +618,7 @@ int moveMenu(int select, int choice, int startPosY) {
         else if (choice == startPosY + 5) { outGame = true; exitGame(); break; } // Выход
         else break;
     }
-    case 27: { if (checkStarGame) { Game(); break; } else break; }
+    case 27: { if (checkStarGame) { player.resume(); /*BloodMoney*/ Game(); break; } else break; }
     default: break;
     }
     return moveY;
@@ -706,5 +722,19 @@ bool exitMenu = false;
 bool offMenu = true;
 
 int soundLVL = stoi(gameText[22]);
+vector<string> tracks = {
+    "C:/Users/Sergienko/source/repos/GAME_EXSAMEN/Sound/4.BloodMoney.wav",
+    "C:/Users/Sergienko/source/repos/GAME_EXSAMEN/Sound/2.AnimeWow.wav",
+    "C:/Users/Sergienko/source/repos/GAME_EXSAMEN/Sound/13.GiveYouUp.wav",
+    "C:/Users/Sergienko/source/repos/GAME_EXSAMEN/Sound/8.CatRap.wav",
+    "C:/Users/Sergienko/source/repos/GAME_EXSAMEN/Sound/16.Initial_D.wav",
+    "C:/Users/Sergienko/source/repos/GAME_EXSAMEN/Sound/21.MissionComplite.wav",
+};
+MusicPlayer player(tracks[0]);
+MusicPlayer playerLvL1(tracks[1]);
+MusicPlayer playerLvL2(tracks[2]);
+MusicPlayer playerLvL3(tracks[3]);
+MusicPlayer playerLvL4(tracks[4]);
+MusicPlayer playerLvL5(tracks[5]);
 
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);

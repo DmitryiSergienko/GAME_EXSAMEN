@@ -9,14 +9,18 @@
 #include <ctime> // Для получения времени
 #include <fstream>
 #include <direct.h> // Для создания папки
+#include <filesystem> // Для удаления папки
 #include <shellapi.h> // Для удаления папки
 #include <io.h> // Для _access - проверка наличия папки
 #include <string>
-#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume() - Удалить
-#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume() - Удалить
+#include <mmsystem.h> // Для PlaySound() и waveOutSetVolume() - (Старое)
+#pragma comment(lib, "winmm.lib") // Для PlaySound() и waveOutSetVolume() - (Старое)
 #include <thread> // Для многопотока
 #include <SFML/Audio.hpp> // Для подключения SFML (audio)
+#include <chrono> // Для управлением времени
+#include "MusicPlayer.h"
 using namespace std;
+namespace fs = std::filesystem;
 
 void addPathFiles();
 vector <string> loadText(vector <string> map, string LVL);
@@ -47,7 +51,8 @@ void settingSound(int choice, int posX);
 void changePathSave();
 
 void setVolume(unsigned int volume);
-void playMusic(const string& filename);
+void playMusic(const string& musicFile);
+void playMusicQueue(const vector<string>& musicFiles);
 void playTrack(const wstring& filePath);
 void track(int num);
 
@@ -57,6 +62,8 @@ int nextLVL(int code);
 int moveMenu(int select, int choice, int startPosY);
 void moveGame(int code);
 bool exitGame();
+
+void ppp();
 
 #endif //Header
 
@@ -107,6 +114,13 @@ extern bool exitMenu;
 extern bool offMenu;
 
 extern int soundLVL;
+extern MusicPlayer player;
+extern MusicPlayer playerLvL1;
+extern MusicPlayer playerLvL2;
+extern MusicPlayer playerLvL3;
+extern MusicPlayer playerLvL4;
+extern MusicPlayer playerLvL5;
+extern vector<string> tracks;
 
 extern HANDLE hConsole;
 

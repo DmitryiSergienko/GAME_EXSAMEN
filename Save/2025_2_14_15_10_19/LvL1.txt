@@ -1,0 +1,18 @@
+#####HHHH##############HHHH############
+#   #HHHH#            #HHHH#          #
+#   #HHHH#            #HHHH#          #
+#   #HHHH#            #HHHH#          #
+#   #HHHH#   ######   #HHHH#   ###### #HHHHH###########
+#   #HHHH#   #HHHH#   #HHHH# X #HHHH# #HHHHH#         #
+#   #HHHH#   #HHHH#   #HHHH#   #HHHH# #HHHHH#    !    #
+#   #HHHH#   #HHHH#   #HHHH#   #HHHH# #HHHHH#         #
+# X #HHHH#   #HHHH#   #HHHH# S #HHHH# #HHHHH####   ####
+#   #HHHH# X #HHHH#   #HHHH#   #HHHH# #HHHHHHHH#   #
+#   #HHHH#   #HHHH#   #HHHH#   #HHHH# #HHHHHHHH#   #
+#   #HHHH#   #HHHH# X #HHHH#   #HHHH# #HHHHHHHH#   #
+#   #HHHH#   #HHHH#   #HHHH#   #HHHH# #HHHHHHHH#   #
+#   ######   #HHHH#   ######   #HHHH#X##########^^^###########
+#            #HHHH#            #HHHH#                        >
+#            #HHHH#            #HHHH#                      @ >
+#            #HHHH#            #HHHH#                        >
+##############HHHH##############HHHH##########################
